@@ -1,0 +1,17 @@
+{
+  "name": "ecare_plus_frontend",
+  "version": "1.0.0",
+  "description": "Application frontend de suivi des maladies chroniques (diabète et hypertension).",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://localhost:26831/Mimicode2025/eCare_plus_frontend"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
