@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>eCare+ Suivi Chronique</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>eCare+ : suivi de maladies chroniques</h1>
+        <p>Suivi quotidien du diabète et de l’hypertension.</p>
+      </header>
+
+      <section class="card">
+        <h2>Suivi glycémique (diabète)</h2>
+        <form id="glucose-form">
+          <label>
+            Date
+            <input name="date" type="date" required />
+          </label>
+          <label>
+            Glycémie (mg/dL)
+            <input name="value" type="number" min="1" required />
+          </label>
+          <button type="submit">Ajouter</button>
+        </form>
+        <p id="glucose-summary"></p>
+        <ul id="glucose-list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Suivi tensionnel (hypertension)</h2>
+        <form id="pressure-form">
+          <label>
+            Date
+            <input name="date" type="date" required />
+          </label>
+          <label>
+            Systolique (mmHg)
+            <input name="systolic" type="number" min="1" required />
+          </label>
+          <label>
+            Diastolique (mmHg)
+            <input name="diastolic" type="number" min="1" required />
+          </label>
+          <button type="submit">Ajouter</button>
+        </form>
+        <p id="pressure-summary"></p>
+        <ul id="pressure-list"></ul>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
