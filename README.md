@@ -54,7 +54,8 @@ src/features/
 - React
 - TypeScript
 - Vite
-- CSS
+- Tailwind CSS
+- React Router
 - Oxlint
 
 D'autres dépendances pourront être ajoutées au fur et à mesure des besoins du projet.

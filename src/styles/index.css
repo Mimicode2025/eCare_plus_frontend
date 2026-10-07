@@ -1,0 +1,49 @@
+@import '@fontsource/poppins/latin-600.css';
+@import '@fontsource/poppins/latin-700.css';
+@import '@fontsource/poppins/latin-800.css';
+@import '@fontsource/fira-sans/latin-400.css';
+@import '@fontsource/fira-sans/latin-500.css';
+@import '@fontsource/fira-sans/latin-600.css';
+@import '@fontsource/fira-sans/latin-700.css';
+@import 'tailwindcss';
+
+/* Couleurs et typographie relevées sur la maquette Figma eCare+ (version web). */
+@theme {
+  --font-sans: 'Fira Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Poppins', 'Fira Sans', system-ui, sans-serif;
+
+  --color-page: #f4f7fa;
+  --color-surface: #ffffff;
+  --color-line: #e2e8f0;
+  --color-control: #b0bec5;
+
+  --color-ink: #263238;
+  /* Un cran plus sombre que le gris de la maquette (#607d8b) pour rester lisible en petit corps. */
+  --color-muted: #546e7a;
+
+  --color-primary: #0086c9;
+  --color-primary-strong: #006ba1;
+  --color-primary-soft: #ebf8ff;
+  --color-primary-soft-hover: #d6effc;
+
+  --color-violet: #8e24d6;
+  --color-violet-soft: #f7ebfe;
+
+  --color-danger: #c81e1e;
+  --color-danger-soft: #fde7e7;
+  --color-danger-line: #f5b5b5;
+
+  --color-warning: #8a5a00;
+  --color-warning-soft: #fff8e6;
+  --color-warning-line: #fde3a7;
+
+  --color-success: #15803d;
+  --color-success-soft: #eafcf0;
+  --color-success-line: #b7ebc6;
+}
+
+body {
+  background-color: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
