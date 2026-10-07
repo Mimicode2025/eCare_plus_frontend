@@ -1,4 +1,4 @@
-export type UserRole = 'gestionnaire'
+export type UserRole = 'gestionnaire' | 'medecin'
 
 export interface HealthStructure {
   id: string

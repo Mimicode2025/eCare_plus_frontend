@@ -20,7 +20,7 @@ const headClassName =
 const cellClassName =
   'border-y border-line px-4 py-3 first:rounded-l-lg first:border-l last:rounded-r-lg last:border-r'
 
-function PatientsTable({ patients }: { patients: Patient[] }) {
+function PatientsTable({ patients, canManage }: { patients: Patient[]; canManage: boolean }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-176 border-separate border-spacing-y-2 text-sm">
@@ -70,13 +70,15 @@ function PatientsTable({ patients }: { patients: Patient[] }) {
                     >
                       Consulter
                     </Link>
-                    <Link
-                      to={`/patients/${patient.id}/modifier`}
-                      aria-label={`Modifier le dossier : ${fullName}`}
-                      className={buttonClassName('secondary', 'sm')}
-                    >
-                      Modifier
-                    </Link>
+                    {canManage && (
+                      <Link
+                        to={`/patients/${patient.id}/modifier`}
+                        aria-label={`Modifier le dossier : ${fullName}`}
+                        className={buttonClassName('secondary', 'sm')}
+                      >
+                        Modifier
+                      </Link>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -94,7 +96,12 @@ function countLabel(shown: number, total: number) {
   return total === 1 ? '1 patient enregistré' : `${total} patients enregistrés`
 }
 
-export function PatientsPage() {
+interface PatientsPageProps {
+  /** Autorise l'ajout et la modification de dossiers (gestionnaire). */
+  canManage: boolean
+}
+
+export function PatientsPage({ canManage }: PatientsPageProps) {
   const state = usePatients()
   const [filters, setFilters] = useState(emptyPatientFilters)
 
@@ -120,10 +127,12 @@ export function PatientsPage() {
           state.status === 'success' ? countLabel(shownPatients.length, patients.length) : 'Patients'
         }
         action={
-          <Link to="/patients/nouveau" className={buttonClassName('soft')}>
-            <span aria-hidden="true">+</span>
-            Ajouter un patient
-          </Link>
+          canManage && (
+            <Link to="/patients/nouveau" className={buttonClassName('soft')}>
+              <span aria-hidden="true">+</span>
+              Ajouter un patient
+            </Link>
+          )
         }
       >
         {state.status === 'loading' && (
@@ -133,7 +142,9 @@ export function PatientsPage() {
         )}
         {state.status === 'success' && patients.length === 0 && (
           <p className="py-6 text-center text-sm text-muted">
-            Utilisez « Ajouter un patient » pour créer le premier dossier.
+            {canManage
+              ? 'Utilisez « Ajouter un patient » pour créer le premier dossier.'
+              : "Aucun dossier patient n'est disponible pour le moment."}
           </p>
         )}
         {patients.length > 0 && shownPatients.length === 0 && (
@@ -144,7 +155,7 @@ export function PatientsPage() {
             </Button>
           </div>
         )}
-        {shownPatients.length > 0 && <PatientsTable patients={shownPatients} />}
+        {shownPatients.length > 0 && <PatientsTable patients={shownPatients} canManage={canManage} />}
       </Card>
     </Page>
   )

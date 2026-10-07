@@ -7,8 +7,9 @@ import { PasswordField } from '@/components/ui/PasswordField'
 import { SelectField } from '@/components/ui/SelectField'
 import { TextField } from '@/components/ui/TextField'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { roleLabels } from '@/features/auth/labels'
 import {
-  demoAccount,
+  demoAccounts,
   InvalidCredentialsError,
   structures,
 } from '@/features/auth/services/authService'
@@ -146,10 +147,14 @@ export function LoginPage() {
       </div>
 
       {import.meta.env.DEV && (
-        <p className="max-w-md text-center text-xs text-muted">
-          Compte de démonstration (affiché en développement uniquement) : {demoAccount.identifier}{' '}
-          / {demoAccount.password}
-        </p>
+        <div className="max-w-md text-center text-xs text-muted">
+          <p>Comptes de démonstration (affichés en développement uniquement) :</p>
+          {demoAccounts.map((account) => (
+            <p key={account.identifier}>
+              {roleLabels[account.role]} : {account.identifier} / {account.password}
+            </p>
+          ))}
+        </div>
       )}
     </main>
   )

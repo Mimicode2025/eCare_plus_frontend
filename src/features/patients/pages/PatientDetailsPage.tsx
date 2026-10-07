@@ -8,6 +8,7 @@ import { ConditionBadges } from '@/features/patients/components/ConditionBadges'
 import { PatientUnavailable } from '@/features/patients/components/PatientUnavailable'
 import { usePatient } from '@/features/patients/hooks/usePatients'
 import { conditionLabels, sexLabels } from '@/features/patients/labels'
+import type { Patient } from '@/features/patients/types/patient'
 import { formatDate } from '@/utils/formatDate'
 import { getAge } from '@/utils/getAge'
 
@@ -26,7 +27,12 @@ function Item({ label, value }: { label: string; value?: string }) {
   )
 }
 
-export function PatientDetailsPage() {
+interface PatientDetailsPageProps {
+  /** Contenu complémentaire affiché sous l'en-tête du dossier, composé par l'application. */
+  renderExtra?: (patient: Patient) => ReactNode
+}
+
+export function PatientDetailsPage({ renderExtra }: PatientDetailsPageProps) {
   const { patientId } = useParams()
   const location = useLocation()
   const state = usePatient(patientId)
@@ -79,6 +85,8 @@ export function PatientDetailsPage() {
           </div>
         </div>
       </Card>
+
+      {renderExtra?.(patient)}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Card title="Informations personnelles">

@@ -1,8 +1,6 @@
 import { Navigate, useLocation } from 'react-router'
 import { AppLayout } from '@/components/layouts/AppLayout'
-import { useAuth } from '@/features/auth'
-
-const roleLabels = { gestionnaire: 'Gestionnaire' }
+import { roleLabels, useAuth } from '@/features/auth'
 
 /**
  * Mise en page des écrans réservés aux utilisateurs connectés.

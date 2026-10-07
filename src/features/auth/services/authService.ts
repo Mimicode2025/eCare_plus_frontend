@@ -1,9 +1,9 @@
-import type { Credentials, HealthStructure, User } from '@/features/auth/types/auth'
+import type { Credentials, HealthStructure, User, UserRole } from '@/features/auth/types/auth'
 
 /*
  * AUTHENTIFICATION FICTIVE — aucun appel API.
  * Ce service simule le backend tant que le contrat d'authentification n'est pas défini.
- * Le compte, les structures et le mécanisme de session ci-dessous sont provisoires et inventés :
+ * Les comptes, les structures et le mécanisme de session ci-dessous sont provisoires et inventés :
  * la vérification réelle des identifiants et des droits relève du backend.
  */
 
@@ -15,12 +15,18 @@ export const structures: HealthStructure[] = [
   { id: 'structure-demo-2', name: 'Clinique Fictive, Kara' },
 ]
 
-/** Seul compte reconnu par le service fictif. */
-export const demoAccount = {
-  identifier: 'abi2026',
-  password: '12345678',
-  name: 'Awa Démo',
+interface DemoAccount {
+  identifier: string
+  password: string
+  name: string
+  role: UserRole
 }
+
+/** Seuls comptes reconnus par le service fictif : un par rôle. */
+export const demoAccounts: DemoAccount[] = [
+  { identifier: 'abi2026', password: '12345678', name: 'Awa Démo', role: 'gestionnaire' },
+  { identifier: 'dr2026', password: '12345678', name: 'Dr Kofi Démo', role: 'medecin' },
+]
 
 export class InvalidCredentialsError extends Error {}
 
@@ -29,7 +35,7 @@ function isUser(value: unknown): value is User {
   const { name, role, structure } = value as Record<string, unknown>
   return (
     typeof name === 'string' &&
-    role === 'gestionnaire' &&
+    demoAccounts.some((account) => account.role === role) &&
     structures.some((known) => known.id === (structure as HealthStructure | undefined)?.id)
   )
 }
@@ -48,11 +54,13 @@ export async function login({ structureId, identifier, password }: Credentials):
   await new Promise<void>((resolve) => setTimeout(resolve, SIMULATED_DELAY_MS))
 
   const structure = structures.find((known) => known.id === structureId)
-  const matches =
-    identifier.trim().toLowerCase() === demoAccount.identifier && password === demoAccount.password
-  if (!structure || !matches) throw new InvalidCredentialsError()
+  const account = demoAccounts.find(
+    (known) =>
+      known.identifier === identifier.trim().toLowerCase() && known.password === password,
+  )
+  if (!structure || !account) throw new InvalidCredentialsError()
 
-  const user: User = { name: demoAccount.name, role: 'gestionnaire', structure }
+  const user: User = { name: account.name, role: account.role, structure }
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(user))
   return user
 }
