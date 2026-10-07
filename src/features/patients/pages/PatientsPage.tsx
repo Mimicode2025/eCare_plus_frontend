@@ -1,13 +1,19 @@
+import { useState } from 'react'
 import { Link } from 'react-router'
 import { Page } from '@/components/layouts/Page'
 import { Alert } from '@/components/ui/Alert'
+import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { buttonClassName } from '@/components/ui/styles'
 import { ConditionBadges } from '@/features/patients/components/ConditionBadges'
+import { PatientFilters } from '@/features/patients/components/PatientFilters'
+import { emptyPatientFilters, filterPatients } from '@/features/patients/filterPatients'
 import { usePatients } from '@/features/patients/hooks/usePatients'
 import type { Patient } from '@/features/patients/types/patient'
 import { formatDate } from '@/utils/formatDate'
 import { getAge } from '@/utils/getAge'
+
+const pageDescription = 'Dossiers des patients suivis par la structure'
 
 const headClassName =
   'bg-page px-4 py-3 text-left text-xs font-semibold tracking-wide text-muted uppercase first:rounded-l-lg last:rounded-r-lg'
@@ -82,45 +88,64 @@ function PatientsTable({ patients }: { patients: Patient[] }) {
   )
 }
 
-function countLabel(count: number) {
-  if (count === 0) return 'Aucun patient enregistré'
-  return count === 1 ? '1 patient enregistré' : `${count} patients enregistrés`
+function countLabel(shown: number, total: number) {
+  if (total === 0) return 'Aucun patient enregistré'
+  if (shown !== total) return `${shown} sur ${total} patients enregistrés`
+  return total === 1 ? '1 patient enregistré' : `${total} patients enregistrés`
 }
 
 export function PatientsPage() {
   const state = usePatients()
+  const [filters, setFilters] = useState(emptyPatientFilters)
 
-  return (
-    <Page title="Liste des patients" description="Dossiers des patients suivis par la structure">
-      {state.status === 'error' ? (
+  if (state.status === 'error') {
+    return (
+      <Page title="Liste des patients" description={pageDescription}>
         <Alert variant="error" title="La liste des patients n'a pas pu être chargée.">
           Rechargez la page pour réessayer.
         </Alert>
-      ) : (
-        <Card
-          title={state.status === 'success' ? countLabel(state.patients.length) : 'Patients'}
-          action={
-            <Link to="/patients/nouveau" className={buttonClassName('soft')}>
-              <span aria-hidden="true">+</span>
-              Ajouter un patient
-            </Link>
-          }
-        >
-          {state.status === 'loading' && (
-            <p role="status" className="py-6 text-center text-sm text-muted">
-              Chargement des patients…
-            </p>
-          )}
-          {state.status === 'success' &&
-            (state.patients.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted">
-                Utilisez « Ajouter un patient » pour créer le premier dossier.
-              </p>
-            ) : (
-              <PatientsTable patients={state.patients} />
-            ))}
-        </Card>
-      )}
+      </Page>
+    )
+  }
+
+  const patients = state.status === 'success' ? state.patients : []
+  const shownPatients = filterPatients(patients, filters)
+
+  return (
+    <Page title="Liste des patients" description={pageDescription}>
+      {patients.length > 0 && <PatientFilters value={filters} onChange={setFilters} />}
+
+      <Card
+        title={
+          state.status === 'success' ? countLabel(shownPatients.length, patients.length) : 'Patients'
+        }
+        action={
+          <Link to="/patients/nouveau" className={buttonClassName('soft')}>
+            <span aria-hidden="true">+</span>
+            Ajouter un patient
+          </Link>
+        }
+      >
+        {state.status === 'loading' && (
+          <p role="status" className="py-6 text-center text-sm text-muted">
+            Chargement des patients…
+          </p>
+        )}
+        {state.status === 'success' && patients.length === 0 && (
+          <p className="py-6 text-center text-sm text-muted">
+            Utilisez « Ajouter un patient » pour créer le premier dossier.
+          </p>
+        )}
+        {patients.length > 0 && shownPatients.length === 0 && (
+          <div className="flex flex-col items-center gap-3 py-6">
+            <p className="text-sm text-muted">Aucun patient ne correspond à ces critères.</p>
+            <Button variant="secondary" size="sm" onClick={() => setFilters(emptyPatientFilters)}>
+              Effacer les filtres
+            </Button>
+          </div>
+        )}
+        {shownPatients.length > 0 && <PatientsTable patients={shownPatients} />}
+      </Card>
     </Page>
   )
 }
