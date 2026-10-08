@@ -98,9 +98,9 @@ Fonctionnalités en place :
 
 - connexion et déconnexion, avec des écrans adaptés au rôle ;
 - gestionnaire : liste des patients avec recherche et filtre, création, consultation et modification d'un dossier ;
-- médecin : consultation des dossiers et suivi des mesures (dernières valeurs et historique).
+- médecin : tableau de bord, file des alertes et traitement d'une alerte, liste des patients avec dernière mesure et alertes, dossier avec suivi des mesures (dernières valeurs et historique) et observations cliniques.
 
-Toutes les données sont **fictives** : l'authentification, les patients et les mesures sont simulés dans les fichiers `services/` de chaque feature, en attendant l'API du backend.
+Toutes les données sont **fictives** : l'authentification, les patients, les mesures et les alertes sont simulés dans les fichiers `services/` de chaque feature, en attendant l'API du backend.
 
 Comptes de démonstration (toute structure, mot de passe `12345678`) :
 

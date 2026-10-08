@@ -42,7 +42,7 @@ export function LoginPage() {
 
   // Page demandée avant la redirection vers la connexion, s'il y en a une.
   const from: unknown = location.state?.from
-  const destination = typeof from === 'string' ? from : '/patients'
+  const destination = typeof from === 'string' ? from : '/'
 
   if (user) return <Navigate to={destination} replace />
 

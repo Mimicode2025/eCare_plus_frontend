@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { Page } from '@/components/layouts/Page'
 import { Alert } from '@/components/ui/Alert'
@@ -20,7 +20,24 @@ const headClassName =
 const cellClassName =
   'border-y border-line px-4 py-3 first:rounded-l-lg first:border-l last:rounded-r-lg last:border-r'
 
-function PatientsTable({ patients, canManage }: { patients: Patient[]; canManage: boolean }) {
+export interface PatientColumn {
+  header: string
+  render: (patient: Patient) => ReactNode
+}
+
+/** Colonnes administratives, affichées quand l'application n'en fournit pas d'autres. */
+const administrativeColumns: PatientColumn[] = [
+  { header: 'Téléphone', render: (patient) => patient.phone },
+  { header: 'Dossier créé le', render: (patient) => formatDate(patient.createdAt) },
+]
+
+interface PatientsTableProps {
+  patients: Patient[]
+  columns: PatientColumn[]
+  canManage: boolean
+}
+
+function PatientsTable({ patients, columns, canManage }: PatientsTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-176 border-separate border-spacing-y-2 text-sm">
@@ -32,12 +49,11 @@ function PatientsTable({ patients, canManage }: { patients: Patient[]; canManage
             <th scope="col" className={headClassName}>
               Pathologie
             </th>
-            <th scope="col" className={headClassName}>
-              Téléphone
-            </th>
-            <th scope="col" className={headClassName}>
-              Dossier créé le
-            </th>
+            {columns.map((column) => (
+              <th key={column.header} scope="col" className={headClassName}>
+                {column.header}
+              </th>
+            ))}
             <th scope="col" className={headClassName}>
               Action
             </th>
@@ -57,10 +73,11 @@ function PatientsTable({ patients, canManage }: { patients: Patient[]; canManage
                 <td className={cellClassName}>
                   <ConditionBadges condition={patient.condition} />
                 </td>
-                <td className={`${cellClassName} whitespace-nowrap`}>{patient.phone}</td>
-                <td className={`${cellClassName} whitespace-nowrap`}>
-                  {formatDate(patient.createdAt)}
-                </td>
+                {columns.map((column) => (
+                  <td key={column.header} className={`${cellClassName} whitespace-nowrap`}>
+                    {column.render(patient)}
+                  </td>
+                ))}
                 <td className={cellClassName}>
                   <div className="flex gap-2">
                     <Link
@@ -99,9 +116,11 @@ function countLabel(shown: number, total: number) {
 interface PatientsPageProps {
   /** Autorise l'ajout et la modification de dossiers (gestionnaire). */
   canManage: boolean
+  /** Colonnes fournies par l'application à la place des colonnes administratives (suivi médical). */
+  columns?: PatientColumn[]
 }
 
-export function PatientsPage({ canManage }: PatientsPageProps) {
+export function PatientsPage({ canManage, columns = administrativeColumns }: PatientsPageProps) {
   const state = usePatients()
   const [filters, setFilters] = useState(emptyPatientFilters)
 
@@ -155,7 +174,7 @@ export function PatientsPage({ canManage }: PatientsPageProps) {
             </Button>
           </div>
         )}
-        {shownPatients.length > 0 && <PatientsTable patients={shownPatients} canManage={canManage} />}
+        {shownPatients.length > 0 && <PatientsTable patients={shownPatients} columns={columns} canManage={canManage} />}
       </Card>
     </Page>
   )

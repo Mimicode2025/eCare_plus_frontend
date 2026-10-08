@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Alert } from '@/components/ui/Alert'
+import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { SelectField } from '@/components/ui/SelectField'
+import { MeasurementTrends } from '@/features/measurements/components/MeasurementTrends'
 import { useMeasurements } from '@/features/measurements/hooks/useMeasurements'
 import {
   formatMeasurementValue,
@@ -46,9 +48,14 @@ function LatestMeasurements({ measurements }: { measurements: Measurement[] }) {
   )
 }
 
+/** Nombre de mesures affichées dans l'historique avant de demander la suite. */
+const HISTORY_PAGE_SIZE = 10
+
 function MeasurementHistory({ measurements }: { measurements: Measurement[] }) {
   const [kind, setKind] = useState('')
+  const [expanded, setExpanded] = useState(false)
   const shown = kind ? measurements.filter((measurement) => measurement.kind === kind) : measurements
+  const visible = expanded ? shown : shown.slice(0, HISTORY_PAGE_SIZE)
 
   return (
     <Card title="Historique des mesures">
@@ -85,7 +92,7 @@ function MeasurementHistory({ measurements }: { measurements: Measurement[] }) {
                 </tr>
               </thead>
               <tbody>
-                {shown.map((measurement) => (
+                {visible.map((measurement) => (
                   <tr key={measurement.id}>
                     <td className={`${cellClassName} whitespace-nowrap`}>
                       {formatDateTime(measurement.recordedAt)}
@@ -98,6 +105,16 @@ function MeasurementHistory({ measurements }: { measurements: Measurement[] }) {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {shown.length > HISTORY_PAGE_SIZE && (
+          <div className="flex justify-center">
+            <Button variant="secondary" size="sm" onClick={() => setExpanded(!expanded)}>
+              {expanded
+                ? 'Afficher seulement les plus récentes'
+                : `Afficher les ${shown.length} mesures`}
+            </Button>
           </div>
         )}
       </div>
@@ -137,6 +154,7 @@ export function PatientMeasurements({ patientId }: { patientId: string }) {
       <Card title="Dernières mesures reçues">
         <LatestMeasurements measurements={state.measurements} />
       </Card>
+      <MeasurementTrends measurements={state.measurements} />
       <MeasurementHistory measurements={state.measurements} />
     </>
   )

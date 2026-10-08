@@ -3,20 +3,18 @@ import logoMark from '@/assets/logo-mark.png'
 import { Avatar } from '@/components/ui/Avatar'
 import { Button } from '@/components/ui/Button'
 
+export interface NavItem {
+  to: string
+  label: string
+  /** Tracé SVG du pictogramme, sur une grille de 24 × 24. */
+  iconPath: string
+}
+
 interface AppLayoutProps {
+  navItems: NavItem[]
   user: { name: string; description: string }
   onLogout: () => void
 }
-
-const navItems = [
-  {
-    to: '/patients',
-    label: 'Liste des patients',
-    // Pictogramme « groupe de personnes ».
-    iconPath:
-      'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0v1H2v-1Zm15.5-9.5a3.5 3.5 0 1 0-1.6-6.6 6 6 0 0 1 0 6.2c.5.25 1 .4 1.6.4ZM18 21v-1a8.9 8.9 0 0 0-1.9-5.5A6 6 0 0 1 22 20v1h-4Z',
-  },
-]
 
 function getInitials(name: string) {
   return name
@@ -26,7 +24,7 @@ function getInitials(name: string) {
     .join('')
 }
 
-export function AppLayout({ user, onLogout }: AppLayoutProps) {
+export function AppLayout({ navItems, user, onLogout }: AppLayoutProps) {
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
       <aside className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-3 border-b border-line bg-surface px-4 py-3 sm:px-8 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:flex-col lg:flex-nowrap lg:items-stretch lg:gap-8 lg:border-r lg:border-b-0 lg:px-4 lg:py-6">
@@ -36,7 +34,7 @@ export function AppLayout({ user, onLogout }: AppLayoutProps) {
         </div>
 
         <nav aria-label="Navigation principale">
-          <ul className="flex gap-1 lg:flex-col">
+          <ul className="flex flex-wrap gap-1 lg:flex-col">
             {navItems.map((item) => (
               <li key={item.to}>
                 <NavLink
