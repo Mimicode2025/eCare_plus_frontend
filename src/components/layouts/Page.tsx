@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
-import { linkClassName } from '@/components/ui/styles'
+import { buttonClassName } from '@/components/ui/styles'
 
 interface PageProps {
   title: string
@@ -17,8 +17,8 @@ export function Page({ title, description, backLink, action, children }: PagePro
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line bg-surface px-4 py-4 sm:px-8">
         <div className="flex flex-col gap-1">
           {backLink && (
-            <Link to={backLink.to} className={`self-start text-sm ${linkClassName}`}>
-              <span aria-hidden="true">← </span>
+            <Link to={backLink.to} className={`self-start ${buttonClassName('secondary', 'sm')}`}>
+              <span aria-hidden="true">←</span>
               {backLink.label}
             </Link>
           )}

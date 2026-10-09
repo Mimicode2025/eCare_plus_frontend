@@ -4,7 +4,7 @@ import { Page } from '@/components/layouts/Page'
 import { Alert as AlertMessage } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { linkClassName } from '@/components/ui/styles'
+import { buttonClassName } from '@/components/ui/styles'
 import { TextareaField } from '@/components/ui/TextareaField'
 import { useAlert } from '@/features/alerts/hooks/useAlerts'
 import { closeAlert } from '@/features/alerts/services/alertService'
@@ -213,8 +213,11 @@ export function AlertDetailsPage({ currentUserName, renderPatientContext }: Aler
             )}
           </Card>
 
-          <Link to={`/patients/${alert.patientId}`} className={`self-start text-sm ${linkClassName}`}>
-            Consulter le dossier de ce patient
+          <Link
+            to={`/patients/${alert.patientId}`}
+            className={`self-start ${buttonClassName('secondary')}`}
+          >
+            Consulter le dossier du patient
           </Link>
         </div>
       </div>

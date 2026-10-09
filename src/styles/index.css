@@ -42,6 +42,13 @@
   --color-success-line: #b7ebc6;
 }
 
+/* Défilement doux vers les ancres, sauf si l'utilisateur a demandé à réduire les animations. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 body {
   background-color: var(--color-page);
   color: var(--color-ink);

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Navigate } from 'react-router'
 import { DoctorPatientRecordRoute, DoctorPatientsRoute } from '@/app/routes/doctorRoutes'
 import { useAuth, type UserRole } from '@/features/auth'
+import { LandingPage } from '@/features/landing'
 import { PatientDetailsPage, PatientsPage } from '@/features/patients'
 
 /*
@@ -20,6 +21,12 @@ const homePaths: Record<UserRole, string> = {
 export function HomeRedirect() {
   const { user } = useAuth()
   return <Navigate to={user ? homePaths[user.role] : '/connexion'} replace />
+}
+
+/** Page de présentation pour les visiteurs ; un utilisateur connecté rejoint son accueil. */
+export function LandingRoute() {
+  const { user } = useAuth()
+  return user ? <HomeRedirect /> : <LandingPage />
 }
 
 /** Réserve un écran à un rôle ; les autres sont renvoyés vers leur page d'accueil. */

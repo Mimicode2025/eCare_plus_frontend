@@ -1,70 +1,100 @@
-import type { Credentials, HealthStructure, User, UserRole } from '@/features/auth/types/auth'
+import type { Credentials, Session, UserRole } from '@/features/auth/types/auth'
+import { ApiError, apiRequest, setAccessToken } from '@/lib/apiClient'
 
-/*
- * AUTHENTIFICATION FICTIVE — aucun appel API.
- * Ce service simule le backend tant que le contrat d'authentification n'est pas défini.
- * Les comptes, les structures et le mécanisme de session ci-dessous sont provisoires et inventés :
- * la vérification réelle des identifiants et des droits relève du backend.
- */
-
-const SIMULATED_DELAY_MS = 700
 const SESSION_KEY = 'ecare.session'
 
-export const structures: HealthStructure[] = [
-  { id: 'structure-demo-1', name: 'Centre de santé Démo, Lomé' },
-  { id: 'structure-demo-2', name: 'Clinique Fictive, Kara' },
-]
-
-interface DemoAccount {
-  identifier: string
-  password: string
-  name: string
-  role: UserRole
+/** Réponse de `POST /auth/connexion`. */
+interface SessionResponse {
+  jeton: string
+  expireLe: string
+  profil: { id: string; nom: string; prenoms: string }
 }
 
-/** Seuls comptes reconnus par le service fictif : un par rôle. */
-export const demoAccounts: DemoAccount[] = [
-  { identifier: 'abi2026', password: '12345678', name: 'Awa Démo', role: 'gestionnaire' },
-  { identifier: 'dr2026', password: '12345678', name: 'Dr Kofi Démo', role: 'medecin' },
-]
+/*
+ * Correspondance entre le rôle porté par le jeton et les rôles du portail web.
+ * Le backend ne connaît pas de rôle « gestionnaire » : l'administrateur de structure en tient
+ * lieu ici. Correspondance à confirmer ; les autres rôles n'ont pas d'écran web défini.
+ */
+const rolesByClaim: Partial<Record<string, UserRole>> = {
+  ADMINISTRATEUR_STRUCTURE: 'gestionnaire',
+  MEDECIN: 'medecin',
+}
 
 export class InvalidCredentialsError extends Error {}
 
-function isUser(value: unknown): value is User {
+/** Compte valide, mais dont le rôle n'a pas d'accès défini au portail web. */
+export class UnsupportedRoleError extends Error {}
+
+/** Le profil renvoyé à la connexion ne porte pas le rôle : il est lu dans le jeton. */
+function readRoleClaim(token: string): string | undefined {
+  try {
+    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const claims: unknown = JSON.parse(atob(payload))
+    const role = (claims as { role?: unknown }).role
+    return typeof role === 'string' ? role : undefined
+  } catch {
+    return undefined
+  }
+}
+
+function isSession(value: unknown): value is Session {
   if (typeof value !== 'object' || value === null) return false
-  const { name, role, structure } = value as Record<string, unknown>
+  const { token, expiresAt, user } = value as Record<string, unknown>
   return (
-    typeof name === 'string' &&
-    demoAccounts.some((account) => account.role === role) &&
-    structures.some((known) => known.id === (structure as HealthStructure | undefined)?.id)
+    typeof token === 'string' &&
+    typeof expiresAt === 'string' &&
+    typeof user === 'object' &&
+    user !== null &&
+    typeof (user as Record<string, unknown>).name === 'string' &&
+    Object.values(rolesByClaim).includes((user as Record<string, unknown>).role as UserRole)
   )
 }
 
 /** Session conservée le temps de l'onglet, pour ne pas redemander la connexion à chaque rechargement. */
-export function restoreSession(): User | null {
+export function restoreSession(): Session | null {
   try {
     const stored: unknown = JSON.parse(sessionStorage.getItem(SESSION_KEY) ?? 'null')
-    return isUser(stored) ? stored : null
+    if (!isSession(stored) || new Date(stored.expiresAt).getTime() <= Date.now()) {
+      sessionStorage.removeItem(SESSION_KEY)
+      return null
+    }
+    setAccessToken(stored.token)
+    return stored
   } catch {
     return null
   }
 }
 
-export async function login({ structureId, identifier, password }: Credentials): Promise<User> {
-  await new Promise<void>((resolve) => setTimeout(resolve, SIMULATED_DELAY_MS))
+export async function login({ identifier, password }: Credentials): Promise<Session> {
+  let response: SessionResponse
+  try {
+    response = await apiRequest<SessionResponse>('/auth/connexion', {
+      method: 'POST',
+      body: { identifiant: identifier.trim(), motDePasse: password },
+    })
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) throw new InvalidCredentialsError()
+    throw error
+  }
 
-  const structure = structures.find((known) => known.id === structureId)
-  const account = demoAccounts.find(
-    (known) =>
-      known.identifier === identifier.trim().toLowerCase() && known.password === password,
-  )
-  if (!structure || !account) throw new InvalidCredentialsError()
+  const role = rolesByClaim[readRoleClaim(response.jeton) ?? '']
+  if (!role) throw new UnsupportedRoleError()
 
-  const user: User = { name: account.name, role: account.role, structure }
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(user))
-  return user
+  const session: Session = {
+    token: response.jeton,
+    expiresAt: response.expireLe,
+    user: {
+      id: response.profil.id,
+      name: `${response.profil.prenoms} ${response.profil.nom}`,
+      role,
+    },
+  }
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session))
+  setAccessToken(session.token)
+  return session
 }
 
 export function logout() {
   sessionStorage.removeItem(SESSION_KEY)
+  setAccessToken(null)
 }

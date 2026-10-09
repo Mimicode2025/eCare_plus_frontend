@@ -4,27 +4,44 @@ import logoMark from '@/assets/logo-mark.png'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { PasswordField } from '@/components/ui/PasswordField'
-import { SelectField } from '@/components/ui/SelectField'
 import { TextField } from '@/components/ui/TextField'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { roleLabels } from '@/features/auth/labels'
 import {
-  demoAccounts,
   InvalidCredentialsError,
-  structures,
+  UnsupportedRoleError,
 } from '@/features/auth/services/authService'
 
-type LoginField = 'structureId' | 'identifier' | 'password'
+type LoginField = 'identifier' | 'password'
 type LoginErrors = Partial<Record<LoginField, string>>
+type LoginFailure = 'credentials' | 'role' | 'unknown'
 
-const fieldOrder: LoginField[] = ['structureId', 'identifier', 'password']
+const fieldOrder: LoginField[] = ['identifier', 'password']
 const fieldId = (field: LoginField) => `login-${field}`
-const structureOptions = structures.map(({ id, name }) => ({ value: id, label: name }))
 
 const requiredMessages: Record<LoginField, string> = {
-  structureId: 'Sélectionnez votre structure sanitaire.',
-  identifier: 'Saisissez votre identifiant professionnel.',
+  identifier: 'Saisissez votre adresse e-mail ou votre numéro de téléphone.',
   password: 'Saisissez votre mot de passe.',
+}
+
+const failureMessages: Record<LoginFailure, { title: string; hint: string }> = {
+  credentials: {
+    title: 'Identifiant ou mot de passe incorrect.',
+    hint: 'Vérifiez votre saisie puis réessayez.',
+  },
+  role: {
+    title: "Ce compte n'a pas accès au portail professionnel.",
+    hint: 'Rapprochez-vous de votre structure sanitaire pour vérifier vos droits.',
+  },
+  unknown: {
+    title: "La connexion n'a pas pu aboutir.",
+    hint: 'Vérifiez votre connexion internet puis réessayez.',
+  },
+}
+
+function toFailure(error: unknown): LoginFailure {
+  if (error instanceof InvalidCredentialsError) return 'credentials'
+  if (error instanceof UnsupportedRoleError) return 'role'
+  return 'unknown'
 }
 
 export function LoginPage() {
@@ -32,13 +49,12 @@ export function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const [values, setValues] = useState<Record<LoginField, string>>({
-    structureId: '',
     identifier: '',
     password: '',
   })
   const [errors, setErrors] = useState<LoginErrors>({})
   const [submitting, setSubmitting] = useState(false)
-  const [failure, setFailure] = useState<'credentials' | 'unknown' | null>(null)
+  const [failure, setFailure] = useState<LoginFailure | null>(null)
 
   // Page demandée avant la redirection vers la connexion, s'il y en a une.
   const from: unknown = location.state?.from
@@ -79,7 +95,7 @@ export function LoginPage() {
       await login(values)
       await navigate(destination, { replace: true })
     } catch (error) {
-      setFailure(error instanceof InvalidCredentialsError ? 'credentials' : 'unknown')
+      setFailure(toFailure(error))
       setSubmitting(false)
     }
   }
@@ -101,29 +117,14 @@ export function LoginPage() {
           className="mt-6 flex flex-col gap-5"
         >
           {failure && (
-            <Alert
-              variant="error"
-              title={
-                failure === 'credentials'
-                  ? 'Identifiant ou mot de passe incorrect.'
-                  : "La connexion n'a pas pu aboutir."
-              }
-            >
-              {failure === 'credentials'
-                ? 'Vérifiez votre saisie puis réessayez.'
-                : 'Vérifiez votre connexion internet puis réessayez.'}
+            <Alert variant="error" title={failureMessages[failure].title}>
+              {failureMessages[failure].hint}
             </Alert>
           )}
 
           <fieldset disabled={submitting} className="flex min-w-0 flex-col gap-5">
-            <SelectField
-              label="Structure sanitaire de rattachement"
-              placeholder="Sélectionner"
-              options={structureOptions}
-              {...bind('structureId')}
-            />
             <TextField
-              label="Identifiant professionnel"
+              label="E-mail ou numéro de téléphone"
               autoComplete="username"
               {...bind('identifier')}
             />
@@ -137,25 +138,8 @@ export function LoginPage() {
           <Button type="submit" size="lg" fullWidth loading={submitting}>
             {submitting ? 'Connexion en cours…' : 'Se connecter au portail'}
           </Button>
-
-          <p className="rounded-lg border border-warning-line bg-warning-soft px-4 py-3 text-xs leading-relaxed text-warning">
-            Rappel de confidentialité : en accédant à ce portail de télésuivi, vous vous engagez à
-            respecter strictement le secret médical et la protection des données de santé des
-            patients.
-          </p>
         </form>
       </div>
-
-      {import.meta.env.DEV && (
-        <div className="max-w-md text-center text-xs text-muted">
-          <p>Comptes de démonstration (affichés en développement uniquement) :</p>
-          {demoAccounts.map((account) => (
-            <p key={account.identifier}>
-              {roleLabels[account.role]} : {account.identifier} / {account.password}
-            </p>
-          ))}
-        </div>
-      )}
     </main>
   )
 }

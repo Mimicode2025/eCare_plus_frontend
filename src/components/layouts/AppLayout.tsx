@@ -57,7 +57,7 @@ export function AppLayout({ navItems, user, onLogout }: AppLayoutProps) {
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-3 lg:ml-0 lg:flex-col lg:items-stretch lg:gap-4 lg:border-t lg:border-line lg:px-2 lg:pt-6">
+        <div className="ml-auto flex items-center gap-3 lg:mt-auto lg:ml-0 lg:flex-col lg:items-stretch lg:gap-4 lg:border-t lg:border-line lg:px-2 lg:pt-6">
           <div className="hidden items-center gap-3 lg:flex">
             <Avatar initials={getInitials(user.name)} />
             <div className="min-w-0">

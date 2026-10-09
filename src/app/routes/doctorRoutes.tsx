@@ -1,5 +1,12 @@
+import { useState } from 'react'
 import { Badge } from '@/components/ui/Badge'
 import { AlertDetailsPage, PriorityBadge, useAlerts } from '@/features/alerts'
+import {
+  AppointmentStatusBadge,
+  isUpcoming,
+  PatientAppointments,
+  useAppointments,
+} from '@/features/appointments'
 import { useAuth } from '@/features/auth'
 import { DashboardPage, type DashboardData } from '@/features/dashboard'
 import {
@@ -8,6 +15,7 @@ import {
   PatientMeasurements,
   useLatestMeasurements,
 } from '@/features/measurements'
+import { useConversations } from '@/features/messaging'
 import { PatientNotes } from '@/features/notes'
 import {
   PatientDetailsPage,
@@ -24,13 +32,52 @@ const pending = <span className="text-muted">Chargement…</span>
 export function DashboardRoute() {
   const patients = usePatients()
   const alerts = useAlerts()
+  const latest = useLatestMeasurements()
+  const appointments = useAppointments()
+  const conversations = useConversations()
+  const [now] = useState(() => Date.now())
+  const sources = [patients, alerts, latest, appointments, conversations]
 
   let data: DashboardData | null = null
-  if (patients.status === 'success' && alerts.status === 'success') {
+  if (
+    patients.status === 'success' &&
+    alerts.status === 'success' &&
+    latest.status === 'success' &&
+    appointments.status === 'success' &&
+    conversations.status === 'success'
+  ) {
     const active = alerts.data.filter((alert) => !alert.resolution)
     data = {
       patientCount: patients.patients.length,
-      closedAlertCount: alerts.data.length - active.length,
+      recentMeasurements: patients.patients
+        .flatMap((patient) => {
+          const measurement = latest.data[patient.id]
+          return measurement
+            ? [
+                {
+                  patientId: patient.id,
+                  patientName: `${patient.firstName} ${patient.lastName}`,
+                  label: measurementLabel(measurement),
+                  value: formatMeasurementValue(measurement),
+                  recordedAt: measurement.recordedAt,
+                },
+              ]
+            : []
+        })
+        .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt)),
+      upcomingAppointments: appointments.data
+        .filter((appointment) => isUpcoming(appointment, now))
+        .map((appointment) => ({
+          id: appointment.id,
+          patientName: appointment.patientName,
+          reason: appointment.reason,
+          scheduledAt: appointment.scheduledAt,
+          statusBadge: <AppointmentStatusBadge status={appointment.status} />,
+        })),
+      unreadMessageCount: conversations.data.reduce(
+        (total, conversation) => total + conversation.unreadCount,
+        0,
+      ),
       activeAlerts: active
         .map((alert) => ({
           id: alert.id,
@@ -45,12 +92,7 @@ export function DashboardRoute() {
     }
   }
 
-  return (
-    <DashboardPage
-      data={data}
-      failed={patients.status === 'error' || alerts.status === 'error'}
-    />
-  )
+  return <DashboardPage data={data} failed={sources.some(({ status }) => status === 'error')} />
 }
 
 /** Liste des patients du médecin : les colonnes administratives laissent place au suivi. */
@@ -104,7 +146,7 @@ export function DoctorPatientsRoute() {
   return <PatientsPage canManage={false} columns={columns} />
 }
 
-/** Dossier d'un patient vu par le médecin : mesures et observations au-dessus des informations administratives. */
+/** Dossier d'un patient vu par le médecin : mesures, observations et rendez-vous au-dessus des informations administratives. */
 export function DoctorPatientRecordRoute() {
   const { user } = useAuth()
   return (
@@ -114,8 +156,9 @@ export function DoctorPatientRecordRoute() {
           <div className="flex flex-col gap-6 xl:col-span-3">
             <PatientMeasurements patientId={patient.id} />
           </div>
-          <div className="xl:col-span-2">
+          <div className="flex flex-col gap-6 xl:col-span-2">
             <PatientNotes patientId={patient.id} authorName={user?.name ?? ''} />
+            <PatientAppointments patientId={patient.id} />
           </div>
         </div>
       )}

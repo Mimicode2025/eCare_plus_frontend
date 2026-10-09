@@ -1,18 +1,20 @@
 export type UserRole = 'gestionnaire' | 'medecin'
 
-export interface HealthStructure {
+export interface User {
   id: string
   name: string
+  role: UserRole
 }
 
-export interface User {
-  name: string
-  role: UserRole
-  structure: HealthStructure
+export interface Session {
+  token: string
+  /** Date d'expiration du jeton, au format ISO-8601. */
+  expiresAt: string
+  user: User
 }
 
 export interface Credentials {
-  structureId: string
+  /** Adresse e-mail ou numéro de téléphone du compte. */
   identifier: string
   password: string
 }

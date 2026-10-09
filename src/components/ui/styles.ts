@@ -26,7 +26,3 @@ export function controlClassName(invalid: boolean) {
   const border = invalid ? 'border-danger' : 'border-control'
   return `h-10 w-full rounded-lg border ${border} bg-page px-3 text-sm text-ink placeholder:text-muted focus:bg-surface focus:outline-2 focus:outline-primary disabled:text-muted`
 }
-
-/** Lien textuel dans la couleur principale. */
-export const linkClassName =
-  'font-medium text-primary-strong hover:underline focus-visible:outline-2 focus-visible:outline-primary'
