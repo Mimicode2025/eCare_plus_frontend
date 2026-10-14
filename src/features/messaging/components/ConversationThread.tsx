@@ -10,6 +10,7 @@ import {
 } from '@/features/messaging/services/messagingService'
 import type { Conversation, Message } from '@/features/messaging/types/message'
 import { useAsyncData } from '@/hooks/useAsyncData'
+import { useFeedback } from '@/hooks/useFeedback'
 
 // Pictogramme « flèche vers la gauche ».
 const backIconPath = 'M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20v-2Z'
@@ -27,7 +28,7 @@ export function ConversationThread({ conversation, sent, onSent }: ConversationT
   const fieldId = useId()
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
-  const [sendFailed, setSendFailed] = useState(false)
+  const feedback = useFeedback()
   const endRef = useRef<HTMLLIElement>(null)
 
   const loaded = state.status === 'success' ? state.data : []
@@ -49,12 +50,14 @@ export function ConversationThread({ conversation, sent, onSent }: ConversationT
     event.preventDefault()
     if (!text.trim() || sending) return
     setSending(true)
-    setSendFailed(false)
     try {
       onSent(await sendMessage(conversation.id, text.trim()))
       setText('')
     } catch {
-      setSendFailed(true)
+      feedback.error(
+        "Le message n'a pas pu être envoyé",
+        'Votre texte est conservé. Vérifiez votre connexion puis réessayez.',
+      )
     } finally {
       setSending(false)
     }
@@ -93,9 +96,12 @@ export function ConversationThread({ conversation, sent, onSent }: ConversationT
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-page px-4 py-6 sm:px-6">
         {state.status === 'loading' && (
-          <p role="status" className="m-auto text-sm text-muted">
-            Chargement des messages…
-          </p>
+          <div role="status" className="mt-auto flex flex-col gap-4">
+            <span className="sr-only">Chargement des messages…</span>
+            <div aria-hidden="true" className="skeleton h-12 w-2/5 rounded-3xl" />
+            <div aria-hidden="true" className="skeleton h-12 w-1/3 self-end rounded-3xl" />
+            <div aria-hidden="true" className="skeleton h-12 w-1/2 rounded-3xl" />
+          </div>
         )}
         {state.status === 'error' && (
           <Alert variant="error" title="Les messages n'ont pas pu être chargés.">
@@ -121,7 +127,7 @@ export function ConversationThread({ conversation, sent, onSent }: ConversationT
                   )}
                   <li
                     ref={index === messages.length - 1 ? endRef : undefined}
-                    className={`flex max-w-[80%] flex-col gap-1 ${mine ? 'items-end self-end' : 'items-start self-start'}`}
+                    className={`flex max-w-[80%] animate-enter flex-col gap-1 ${mine ? 'items-end self-end' : 'items-start self-start'}`}
                   >
                     <span className="sr-only">{mine ? 'Vous' : conversation.patientName}</span>
                     <p
@@ -148,11 +154,6 @@ export function ConversationThread({ conversation, sent, onSent }: ConversationT
           onSubmit={(event) => void handleSubmit(event)}
           className="flex flex-col gap-3 border-t border-line px-4 py-4 sm:px-6"
         >
-          {sendFailed && (
-            <Alert variant="error" title="Le message n'a pas pu être envoyé.">
-              Votre texte est conservé. Vérifiez votre connexion puis réessayez.
-            </Alert>
-          )}
           <div className="flex items-end gap-2 rounded-4xl border border-control bg-surface py-2 pr-2 pl-5 focus-within:outline-2 focus-within:outline-primary">
             <label htmlFor={fieldId} className="sr-only">
               Votre message

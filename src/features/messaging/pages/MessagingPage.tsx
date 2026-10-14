@@ -37,9 +37,10 @@ export function MessagingPage() {
     return (
       <Page title="Messagerie" description={pageDescription}>
         {state.status === 'loading' ? (
-          <p role="status" className="text-sm text-muted">
-            Chargement des conversations…
-          </p>
+          <div role="status">
+            <span className="sr-only">Chargement des conversations…</span>
+            <div aria-hidden="true" className="skeleton h-[75vh] min-h-112 rounded-3xl" />
+          </div>
         ) : (
           <Alert variant="error" title="Les conversations n'ont pas pu être chargées.">
             Rechargez la page pour réessayer.
@@ -61,7 +62,7 @@ export function MessagingPage() {
 
   return (
     <Page title="Messagerie" description={pageDescription}>
-      <div className="flex h-[75vh] min-h-112 overflow-hidden rounded-3xl border border-line bg-surface shadow-sm lg:h-[calc(100vh-11rem)]">
+      <div className="flex h-[75vh] min-h-112 overflow-hidden rounded-3xl border border-line bg-surface shadow-sm lg:h-[calc(100vh-14rem)]">
         {/* Sur petit écran, la liste laisse place au fil de la conversation ouverte. */}
         <div
           className={`min-h-0 w-full flex-col lg:flex lg:w-88 lg:shrink-0 lg:border-r lg:border-line ${

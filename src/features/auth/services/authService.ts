@@ -7,7 +7,7 @@ const SESSION_KEY = 'ecare.session'
 interface SessionResponse {
   jeton: string
   expireLe: string
-  profil: { id: string; nom: string; prenoms: string }
+  profil: { id: string; nom: string; prenoms: string; email: string | null }
 }
 
 /*
@@ -86,6 +86,7 @@ export async function login({ identifier, password }: Credentials): Promise<Sess
     user: {
       id: response.profil.id,
       name: `${response.profil.prenoms} ${response.profil.nom}`,
+      email: response.profil.email ?? undefined,
       role,
     },
   }

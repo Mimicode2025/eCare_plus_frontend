@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
-import { useLocation, useParams } from 'react-router'
+import { useParams, useSearchParams } from 'react-router'
 import { Page } from '@/components/layouts/Page'
-import { Alert } from '@/components/ui/Alert'
 import { Avatar } from '@/components/ui/Avatar'
 import { Card } from '@/components/ui/Card'
+import { tabId, tabPanelId } from '@/components/ui/tabIds'
+import { Tabs } from '@/components/ui/Tabs'
 import { ConditionBadges } from '@/features/patients/components/ConditionBadges'
 import { PatientUnavailable } from '@/features/patients/components/PatientUnavailable'
 import { usePatient } from '@/features/patients/hooks/usePatients'
@@ -13,6 +14,18 @@ import { formatDate } from '@/utils/formatDate'
 import { getAge } from '@/utils/getAge'
 
 const backLink = { to: '/patients', label: 'Retour à la liste des patients' }
+
+/** Paramètre d'adresse qui retient l'onglet ouvert, pour le retour arrière et le partage du lien. */
+const TAB_PARAM = 'onglet'
+const informationTab = { id: 'informations', label: 'Informations' }
+
+/** Onglet du dossier fourni par l'application, par exemple les mesures ou les observations. */
+export interface PatientTab {
+  id: string
+  label: string
+  /** `openTab` permet à un contenu (un résumé, par exemple) d'ouvrir un autre onglet. */
+  render: (patient: Patient, openTab: (id: string) => void) => ReactNode
+}
 
 function Details({ children }: { children: ReactNode }) {
   return <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">{children}</dl>
@@ -27,17 +40,54 @@ function Item({ label, value }: { label: string; value?: string }) {
   )
 }
 
-interface PatientDetailsPageProps {
-  /** Contenu complémentaire affiché sous l'en-tête du dossier, composé par l'application. */
-  renderExtra?: (patient: Patient) => ReactNode
+function PatientInformation({ patient }: { patient: Patient }) {
+  return (
+    <div className="grid gap-6 xl:grid-cols-2">
+      <Card title="Informations personnelles">
+        <Details>
+          <Item label="Nom" value={patient.lastName} />
+          <Item label="Prénom(s)" value={patient.firstName} />
+          <Item label="Sexe" value={sexLabels[patient.sex]} />
+          <Item label="Date de naissance" value={formatDate(patient.birthDate)} />
+        </Details>
+      </Card>
+
+      <Card title="Coordonnées">
+        <Details>
+          <Item label="Téléphone" value={patient.phone} />
+          <Item label="Adresse e-mail" value={patient.email} />
+          <Item label="Adresse" value={patient.address} />
+        </Details>
+      </Card>
+
+      <Card title="Suivi">
+        <Details>
+          <Item label="Pathologie suivie" value={conditionLabels[patient.condition]} />
+        </Details>
+      </Card>
+
+      <Card title="Personne à prévenir">
+        <Details>
+          <Item label="Nom complet" value={patient.emergencyContactName} />
+          <Item label="Téléphone" value={patient.emergencyContactPhone} />
+        </Details>
+      </Card>
+    </div>
+  )
 }
 
-export function PatientDetailsPage({ renderExtra }: PatientDetailsPageProps) {
+interface PatientDetailsPageProps {
+  /**
+   * Onglets de suivi composés par l'application ; l'onglet « Informations » s'y ajoute en dernier.
+   * Sans onglets, le dossier se limite aux informations administratives.
+   */
+  tabs?: PatientTab[]
+}
+
+export function PatientDetailsPage({ tabs = [] }: PatientDetailsPageProps) {
   const { patientId } = useParams()
-  const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
   const state = usePatient(patientId)
-  // Présent uniquement quand on arrive ici juste après une création ou une modification.
-  const notice: unknown = location.state?.notice
 
   if (state.status !== 'success') {
     return (
@@ -52,23 +102,20 @@ export function PatientDetailsPage({ renderExtra }: PatientDetailsPageProps) {
   const initials = `${patient.firstName.charAt(0)}${patient.lastName.charAt(0)}`.toUpperCase()
   const born = patient.sex === 'F' ? 'Née' : 'Né'
 
+  const allTabs = [...tabs, informationTab]
+  const requested = searchParams.get(TAB_PARAM)
+  // Onglet affiché : celui demandé dans l'adresse s'il existe, sinon le premier.
+  const activeId = allTabs.find((tab) => tab.id === requested)?.id ?? allTabs[0].id
+  const activeTab = tabs.find((tab) => tab.id === activeId)
+  // Changer d'onglet ne crée pas d'étape d'historique : « Retour » ramène à la liste.
+  const openTab = (id: string) => setSearchParams({ [TAB_PARAM]: id }, { replace: true })
+
   return (
     <Page
       title="Dossier patient"
       description={`Dossier n° ${patient.fileNumber}, créé le ${formatDate(patient.createdAt)}`}
       backLink={backLink}
     >
-      {notice === 'created' && (
-        <Alert variant="success" title="Le dossier patient a été créé.">
-          Dossier n° {patient.fileNumber} enregistré pour {fullName}.
-        </Alert>
-      )}
-      {notice === 'updated' && (
-        <Alert variant="success" title="Le dossier patient a été modifié.">
-          Les nouvelles informations sont enregistrées.
-        </Alert>
-      )}
-
       <Card>
         <div className="flex flex-wrap items-center gap-5">
           <Avatar initials={initials} size="lg" />
@@ -79,46 +126,33 @@ export function PatientDetailsPage({ renderExtra }: PatientDetailsPageProps) {
             </div>
             <p className="text-sm text-muted">
               {born} le {formatDate(patient.birthDate)} ({getAge(patient.birthDate)} ans) • Dossier n°{' '}
-              {patient.fileNumber}
-              {patient.address && ` • ${patient.address}`}
+              {patient.fileNumber} • {patient.phone}
             </p>
           </div>
         </div>
       </Card>
 
-      {renderExtra?.(patient)}
-
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card title="Informations personnelles">
-          <Details>
-            <Item label="Nom" value={patient.lastName} />
-            <Item label="Prénom(s)" value={patient.firstName} />
-            <Item label="Sexe" value={sexLabels[patient.sex]} />
-            <Item label="Date de naissance" value={formatDate(patient.birthDate)} />
-          </Details>
-        </Card>
-
-        <Card title="Coordonnées">
-          <Details>
-            <Item label="Téléphone" value={patient.phone} />
-            <Item label="Adresse e-mail" value={patient.email} />
-            <Item label="Adresse" value={patient.address} />
-          </Details>
-        </Card>
-
-        <Card title="Suivi">
-          <Details>
-            <Item label="Pathologie suivie" value={conditionLabels[patient.condition]} />
-          </Details>
-        </Card>
-
-        <Card title="Personne à prévenir">
-          <Details>
-            <Item label="Nom complet" value={patient.emergencyContactName} />
-            <Item label="Téléphone" value={patient.emergencyContactPhone} />
-          </Details>
-        </Card>
-      </div>
+      {tabs.length === 0 ? (
+        <PatientInformation patient={patient} />
+      ) : (
+        <>
+          <Tabs
+            label="Rubriques du dossier"
+            tabs={allTabs}
+            active={activeId}
+            onChange={openTab}
+          />
+          <div
+            key={activeId}
+            id={tabPanelId(activeId)}
+            role="tabpanel"
+            aria-labelledby={tabId(activeId)}
+            className="flex animate-enter flex-col gap-6"
+          >
+            {activeTab ? activeTab.render(patient, openTab) : <PatientInformation patient={patient} />}
+          </div>
+        </>
+      )}
     </Page>
   )
 }

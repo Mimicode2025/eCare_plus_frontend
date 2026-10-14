@@ -1,24 +1,30 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Page } from '@/components/layouts/Page'
-import { Alert } from '@/components/ui/Alert'
 import { PatientForm } from '@/features/patients/components/PatientForm'
 import { createPatient } from '@/features/patients/services/patientService'
 import type { PatientInput } from '@/features/patients/types/patient'
+import { useFeedback } from '@/hooks/useFeedback'
 
 export function CreatePatientPage() {
   const navigate = useNavigate()
+  const feedback = useFeedback()
   const [submitting, setSubmitting] = useState(false)
-  const [submitFailed, setSubmitFailed] = useState(false)
 
   const handleSubmit = async (input: PatientInput) => {
     setSubmitting(true)
-    setSubmitFailed(false)
     try {
       const patient = await createPatient(input)
-      await navigate(`/patients/${patient.id}`, { state: { notice: 'created' } })
+      feedback.success(
+        'Dossier patient créé',
+        `Dossier n° ${patient.fileNumber} enregistré pour ${patient.firstName} ${patient.lastName}.`,
+      )
+      await navigate(`/patients/${patient.id}`)
     } catch {
-      setSubmitFailed(true)
+      feedback.error(
+        "Le dossier n'a pas pu être créé",
+        'Vos informations sont conservées. Vérifiez votre connexion puis réessayez.',
+      )
       setSubmitting(false)
     }
   }
@@ -30,12 +36,6 @@ export function CreatePatientPage() {
       backLink={{ to: '/patients', label: 'Retour à la liste des patients' }}
     >
       <div className="flex w-full max-w-4xl flex-col gap-6">
-        {submitFailed && (
-          <Alert variant="error" title="Le dossier n'a pas pu être créé.">
-            Vos informations sont conservées. Vérifiez votre connexion puis réessayez.
-          </Alert>
-        )}
-
         <PatientForm
           submitting={submitting}
           onSubmit={(input) => void handleSubmit(input)}

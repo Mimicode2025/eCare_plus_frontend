@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { IconLink, recordIconPath } from '@/components/ui/IconLink'
 import { SelectField } from '@/components/ui/SelectField'
+import { PageSkeleton } from '@/components/ui/Skeleton'
 import { StatTile } from '@/components/ui/StatTile'
 import { AppointmentStatusBadge } from '@/features/appointments/components/AppointmentStatusBadge'
 import { useAppointments } from '@/features/appointments/hooks/useAppointments'
@@ -16,6 +17,7 @@ import {
 } from '@/features/appointments/labels'
 import { applyAppointmentAction } from '@/features/appointments/services/appointmentService'
 import type { Appointment, AppointmentAction } from '@/features/appointments/types/appointment'
+import { useFeedback } from '@/hooks/useFeedback'
 import { formatDateTime } from '@/utils/formatDateTime'
 
 const pageDescription = 'Consultations planifiées avec les patients suivis'
@@ -26,6 +28,12 @@ const cellClassName =
   'border-y border-line px-4 py-3 first:rounded-l-lg first:border-l last:rounded-r-lg last:border-r'
 
 const statusOptions = Object.entries(statusLabels).map(([value, label]) => ({ value, label }))
+
+const successTitles: Record<AppointmentAction, string> = {
+  confirmer: 'Rendez-vous confirmé',
+  annuler: 'Rendez-vous annulé',
+  realiser: 'Rendez-vous marqué comme réalisé',
+}
 
 const count = (total: number) => (total === 1 ? '1 rendez-vous' : `${total} rendez-vous`)
 
@@ -118,10 +126,10 @@ function AppointmentsTable({ appointments, pendingId, onAction }: AppointmentsTa
 
 export function AppointmentsPage() {
   const state = useAppointments()
+  const feedback = useFeedback()
   // Rendez-vous dont le statut a changé depuis l'ouverture de l'écran, par identifiant.
   const [changed, setChanged] = useState<Record<string, Appointment>>({})
   const [pendingId, setPendingId] = useState<string>()
-  const [actionFailed, setActionFailed] = useState(false)
   const [status, setStatus] = useState('')
   const [now] = useState(() => Date.now())
 
@@ -129,9 +137,7 @@ export function AppointmentsPage() {
     return (
       <Page title="Rendez-vous" description={pageDescription}>
         {state.status === 'loading' ? (
-          <p role="status" className="text-sm text-muted">
-            Chargement des rendez-vous…
-          </p>
+          <PageSkeleton label="Chargement des rendez-vous…" />
         ) : (
           <Alert variant="error" title="Les rendez-vous n'ont pas pu être chargés.">
             Rechargez la page pour réessayer.
@@ -143,12 +149,18 @@ export function AppointmentsPage() {
 
   const handleAction = async (appointment: Appointment, action: AppointmentAction) => {
     setPendingId(appointment.id)
-    setActionFailed(false)
     try {
       const updated = await applyAppointmentAction(appointment.id, action)
       setChanged((current) => ({ ...current, [updated.id]: updated }))
+      feedback.success(
+        successTitles[action],
+        `${updated.patientName}, ${formatDateTime(updated.scheduledAt)}.`,
+      )
     } catch {
-      setActionFailed(true)
+      feedback.error(
+        "Le rendez-vous n'a pas pu être mis à jour",
+        'Vérifiez votre connexion puis réessayez.',
+      )
     } finally {
       setPendingId(undefined)
     }
@@ -189,12 +201,6 @@ export function AppointmentsPage() {
           onChange={(event) => setStatus(event.target.value)}
         />
       </div>
-
-      {actionFailed && (
-        <Alert variant="error" title="Le rendez-vous n'a pas pu être mis à jour.">
-          Vérifiez votre connexion puis réessayez.
-        </Alert>
-      )}
 
       <Card title="Rendez-vous à venir">
         {upcoming.length === 0 ? (

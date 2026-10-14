@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
 import { AlertDetailsPage, PriorityBadge, useAlerts } from '@/features/alerts'
 import {
   AppointmentStatusBadge,
@@ -22,6 +23,7 @@ import {
   PatientsPage,
   usePatients,
   type PatientColumn,
+  type PatientTab,
 } from '@/features/patients'
 import { formatDateTime } from '@/utils/formatDateTime'
 
@@ -146,24 +148,56 @@ export function DoctorPatientsRoute() {
   return <PatientsPage canManage={false} columns={columns} />
 }
 
-/** Dossier d'un patient vu par le médecin : mesures, observations et rendez-vous au-dessus des informations administratives. */
+/** Dossier d'un patient vu par le médecin : le suivi médical est réparti en onglets. */
 export function DoctorPatientRecordRoute() {
   const { user } = useAuth()
-  return (
-    <PatientDetailsPage
-      renderExtra={(patient) => (
-        <div className="grid items-start gap-6 xl:grid-cols-5">
-          <div className="flex flex-col gap-6 xl:col-span-3">
-            <PatientMeasurements patientId={patient.id} />
-          </div>
-          <div className="flex flex-col gap-6 xl:col-span-2">
-            <PatientNotes patientId={patient.id} authorName={user?.name ?? ''} />
-            <PatientAppointments patientId={patient.id} />
-          </div>
-        </div>
-      )}
-    />
-  )
+  const authorName = user?.name ?? ''
+
+  const tabs: PatientTab[] = [
+    {
+      id: 'resume',
+      label: 'Résumé',
+      // Un aperçu de chaque rubrique ; « Tout voir » ouvre l'onglet correspondant.
+      render: (patient, openTab) => {
+        const seeAll = (tab: string) => (
+          <Button variant="soft" size="sm" onClick={() => openTab(tab)}>
+            Tout voir
+          </Button>
+        )
+        return (
+          <>
+            <PatientMeasurements patientId={patient.id} summary action={seeAll('mesures')} />
+            <div className="grid items-start gap-6 xl:grid-cols-2">
+              <PatientAppointments patientId={patient.id} summary action={seeAll('rendez-vous')} />
+              <PatientNotes
+                patientId={patient.id}
+                authorName={authorName}
+                summary
+                action={seeAll('observations')}
+              />
+            </div>
+          </>
+        )
+      },
+    },
+    {
+      id: 'mesures',
+      label: 'Mesures',
+      render: (patient) => <PatientMeasurements patientId={patient.id} />,
+    },
+    {
+      id: 'observations',
+      label: 'Observations',
+      render: (patient) => <PatientNotes patientId={patient.id} authorName={authorName} />,
+    },
+    {
+      id: 'rendez-vous',
+      label: 'Rendez-vous',
+      render: (patient) => <PatientAppointments patientId={patient.id} />,
+    },
+  ]
+
+  return <PatientDetailsPage tabs={tabs} />
 }
 
 export function AlertRoute() {

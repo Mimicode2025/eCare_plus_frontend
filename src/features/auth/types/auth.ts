@@ -3,6 +3,7 @@ export type UserRole = 'gestionnaire' | 'medecin'
 export interface User {
   id: string
   name: string
+  email?: string
   role: UserRole
 }
 

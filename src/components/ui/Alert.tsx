@@ -17,10 +17,25 @@ export function Alert({ variant, title, children }: AlertProps) {
   return (
     <div
       role={variant === 'error' ? 'alert' : 'status'}
-      className={`rounded-xl border px-5 py-4 text-sm ${variants[variant]}`}
+      className={`flex animate-pop items-start gap-3 rounded-2xl border px-5 py-4 text-sm ${variants[variant]}`}
     >
-      <p className="font-semibold">{title}</p>
-      {children && <div className="mt-1 text-ink">{children}</div>}
+      <svg
+        className="mt-0.5 size-5 shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="9" />
+        {variant === 'success' ? <path d="m8 12.5 2.5 2.5L16 9.5" /> : <path d="M12 7.5v5m0 3.5v.01" />}
+      </svg>
+      <div>
+        <p className="font-semibold">{title}</p>
+        {children && <div className="mt-1 text-ink">{children}</div>}
+      </div>
     </div>
   )
 }

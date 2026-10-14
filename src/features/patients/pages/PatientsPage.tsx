@@ -4,6 +4,7 @@ import { Page } from '@/components/layouts/Page'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { ListSkeleton } from '@/components/ui/Skeleton'
 import { buttonClassName } from '@/components/ui/styles'
 import { ConditionBadges } from '@/features/patients/components/ConditionBadges'
 import { PatientFilters } from '@/features/patients/components/PatientFilters'
@@ -154,11 +155,7 @@ export function PatientsPage({ canManage, columns = administrativeColumns }: Pat
           )
         }
       >
-        {state.status === 'loading' && (
-          <p role="status" className="py-6 text-center text-sm text-muted">
-            Chargement des patients…
-          </p>
-        )}
+        {state.status === 'loading' && <ListSkeleton label="Chargement des patients…" />}
         {state.status === 'success' && patients.length === 0 && (
           <p className="py-6 text-center text-sm text-muted">
             {canManage

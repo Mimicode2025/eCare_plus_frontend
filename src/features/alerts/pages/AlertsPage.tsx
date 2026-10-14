@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import { Page } from '@/components/layouts/Page'
 import { Alert as AlertMessage } from '@/components/ui/Alert'
 import { Card } from '@/components/ui/Card'
+import { PageSkeleton } from '@/components/ui/Skeleton'
 import { StatTile } from '@/components/ui/StatTile'
 import { buttonClassName } from '@/components/ui/styles'
 import { PriorityBadge } from '@/features/alerts/components/PriorityBadge'
@@ -98,9 +99,7 @@ export function AlertsPage() {
     return (
       <Page title="File des alertes" description={pageDescription}>
         {state.status === 'loading' ? (
-          <p role="status" className="text-sm text-muted">
-            Chargement des alertes…
-          </p>
+          <PageSkeleton label="Chargement des alertes…" />
         ) : (
           <AlertMessage variant="error" title="Les alertes n'ont pas pu être chargées.">
             Rechargez la page pour réessayer.

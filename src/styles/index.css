@@ -40,12 +40,83 @@
   --color-success: #15803d;
   --color-success-soft: #eafcf0;
   --color-success-line: #b7ebc6;
+
+  /* Animations d'interface : brèves, et sans état final imposé pour ne pas gêner les survols. */
+  --animate-enter: enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  --animate-pop: pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  --animate-draw: draw 0.4s 0.2s ease-out backwards;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+/* Tracé progressif d'une coche (longueur de trait normalisée à 1 par `pathLength`). */
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+/* Dans la couche « components » pour que les utilitaires (arrondis, etc.) gardent la priorité. */
+@layer components {
+  /* Apparition en cascade des blocs d'un écran. */
+  .animate-stagger > * {
+    animation: enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+  .animate-stagger > :nth-child(2) {
+    animation-delay: 60ms;
+  }
+  .animate-stagger > :nth-child(3) {
+    animation-delay: 120ms;
+  }
+  .animate-stagger > :nth-child(n + 4) {
+    animation-delay: 180ms;
+  }
+
+  /* Bloc de chargement : reflet qui parcourt la forme en attendant le contenu. */
+  .skeleton {
+    border-radius: 0.75rem;
+    background: linear-gradient(
+        90deg,
+        var(--color-line) 25%,
+        var(--color-page) 50%,
+        var(--color-line) 75%
+      )
+      0 0 / 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+  }
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
 }
 
 /* Défilement doux vers les ancres, sauf si l'utilisateur a demandé à réduire les animations. */
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
+  }
+}
+
+/* Animations et transitions neutralisées pour qui a demandé à les réduire. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

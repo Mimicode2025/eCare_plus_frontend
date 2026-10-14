@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -122,8 +122,16 @@ function MeasurementHistory({ measurements }: { measurements: Measurement[] }) {
   )
 }
 
+interface PatientMeasurementsProps {
+  patientId: string
+  /** N'affiche que les dernières valeurs reçues, sans les courbes ni l'historique. */
+  summary?: boolean
+  /** Action placée dans l'en-tête des dernières valeurs, par exemple l'accès au détail. */
+  action?: ReactNode
+}
+
 /** Suivi des mesures d'un patient : dernières valeurs reçues puis historique complet. */
-export function PatientMeasurements({ patientId }: { patientId: string }) {
+export function PatientMeasurements({ patientId, summary = false, action }: PatientMeasurementsProps) {
   const state = useMeasurements(patientId)
 
   if (state.status === 'error') {
@@ -151,11 +159,15 @@ export function PatientMeasurements({ patientId }: { patientId: string }) {
 
   return (
     <>
-      <Card title="Dernières mesures reçues">
+      <Card title="Dernières mesures reçues" action={action}>
         <LatestMeasurements measurements={state.measurements} />
       </Card>
-      <MeasurementTrends measurements={state.measurements} />
-      <MeasurementHistory measurements={state.measurements} />
+      {!summary && (
+        <>
+          <MeasurementTrends measurements={state.measurements} />
+          <MeasurementHistory measurements={state.measurements} />
+        </>
+      )}
     </>
   )
 }

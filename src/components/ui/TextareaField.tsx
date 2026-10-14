@@ -20,9 +20,9 @@ export function TextareaField({ label, error, hint, id, required, ...props }: Te
         required={required}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(fieldId, error, hint)}
-        className={`w-full rounded-lg border ${
+        className={`w-full rounded-2xl border ${
           error ? 'border-danger' : 'border-control'
-        } bg-page px-3 py-2 text-sm text-ink placeholder:text-muted focus:bg-surface focus:outline-2 focus:outline-primary disabled:text-muted`}
+        } bg-page px-4 py-3 text-sm text-ink transition-colors placeholder:text-muted focus:bg-surface focus:outline-2 focus:outline-primary disabled:text-muted`}
         {...props}
       />
     </FormField>

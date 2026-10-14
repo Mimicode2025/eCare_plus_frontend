@@ -1,4 +1,10 @@
 import { Navigate, useLocation } from 'react-router'
+import { DoctorNotifications } from '@/app/routes/DoctorNotifications'
+import {
+  alertsIconPath,
+  appointmentsIconPath,
+  messagingIconPath,
+} from '@/app/routes/navIcons'
 import { AppLayout, type NavItem } from '@/components/layouts/AppLayout'
 import { roleLabels, useAuth, type UserRole } from '@/features/auth'
 
@@ -20,24 +26,19 @@ const patientsItem: NavItem = {
 const alertsItem: NavItem = {
   to: '/alertes',
   label: 'File des alertes',
-  // Pictogramme « cloche ».
-  iconPath:
-    'M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6v-5a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z',
+  iconPath: alertsIconPath,
 }
 
 const messagingItem: NavItem = {
   to: '/messagerie',
   label: 'Messagerie',
-  // Pictogramme « bulle de dialogue ».
-  iconPath: 'M4 3h16a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z',
+  iconPath: messagingIconPath,
 }
 
 const appointmentsItem: NavItem = {
   to: '/rendez-vous',
   label: 'Rendez-vous',
-  // Pictogramme « calendrier ».
-  iconPath:
-    'M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2Zm12 8H5v9h14v-9Z',
+  iconPath: appointmentsIconPath,
 }
 
 const navItemsByRole: Record<UserRole, NavItem[]> = {
@@ -60,7 +61,9 @@ export function ProtectedLayout() {
   return (
     <AppLayout
       navItems={navItemsByRole[user.role]}
-      user={{ name: user.name, description: roleLabels[user.role] }}
+      user={{ name: user.name, role: roleLabels[user.role], email: user.email }}
+      // Les notifications portent sur le suivi médical : elles sont réservées au médecin.
+      topAction={user.role === 'medecin' ? <DoctorNotifications /> : undefined}
       onLogout={logout}
     />
   )

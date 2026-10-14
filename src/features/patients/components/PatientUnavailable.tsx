@@ -1,13 +1,10 @@
 import { Alert } from '@/components/ui/Alert'
+import { PageSkeleton } from '@/components/ui/Skeleton'
 
 /** Contenu affiché à la place du dossier tant qu'il charge, ou s'il ne peut pas être affiché. */
 export function PatientUnavailable({ status }: { status: 'loading' | 'notFound' | 'error' }) {
   if (status === 'loading') {
-    return (
-      <p role="status" className="text-sm text-muted">
-        Chargement du dossier…
-      </p>
-    )
+    return <PageSkeleton label="Chargement du dossier…" />
   }
 
   return status === 'notFound' ? (

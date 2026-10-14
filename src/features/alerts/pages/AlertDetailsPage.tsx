@@ -4,11 +4,13 @@ import { Page } from '@/components/layouts/Page'
 import { Alert as AlertMessage } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { PageSkeleton } from '@/components/ui/Skeleton'
 import { buttonClassName } from '@/components/ui/styles'
 import { TextareaField } from '@/components/ui/TextareaField'
 import { useAlert } from '@/features/alerts/hooks/useAlerts'
 import { closeAlert } from '@/features/alerts/services/alertService'
 import type { Alert } from '@/features/alerts/types/alert'
+import { useFeedback } from '@/hooks/useFeedback'
 import { formatDateTime } from '@/utils/formatDateTime'
 
 const backLink = { to: '/alertes', label: 'Retour à la file des alertes' }
@@ -30,7 +32,7 @@ function AlertBanner({ alert }: { alert: Alert }) {
   const closed = Boolean(alert.resolution)
   return (
     <div
-      className={`flex flex-wrap items-center justify-between gap-4 rounded-xl border px-5 py-4 ${
+      className={`flex flex-wrap items-center justify-between gap-4 rounded-3xl border px-6 py-5 transition-colors duration-300 ${
         closed ? 'border-success-line bg-success-soft' : 'border-danger-line bg-danger-soft'
       }`}
     >
@@ -44,7 +46,7 @@ function AlertBanner({ alert }: { alert: Alert }) {
         </p>
       </div>
       <span
-        className={`rounded-md px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-white ${
+        className={`rounded-full px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap text-white transition-colors duration-300 ${
           closed ? 'bg-success' : 'bg-danger'
         }`}
       >
@@ -68,7 +70,7 @@ function ResolutionForm({ alert, currentUserName, onClosed }: ResolutionFormProp
   const [note, setNote] = useState('')
   const [error, setError] = useState<string>()
   const [submitting, setSubmitting] = useState(false)
-  const [submitFailed, setSubmitFailed] = useState(false)
+  const feedback = useFeedback()
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -79,11 +81,14 @@ function ResolutionForm({ alert, currentUserName, onClosed }: ResolutionFormProp
       return
     }
     setSubmitting(true)
-    setSubmitFailed(false)
     try {
       onClosed(await closeAlert(alert.id, note.trim(), currentUserName))
+      feedback.success('Alerte clôturée', 'Vos observations sont enregistrées.')
     } catch {
-      setSubmitFailed(true)
+      feedback.error(
+        "L'alerte n'a pas pu être clôturée",
+        'Vos observations sont conservées. Vérifiez votre connexion puis réessayez.',
+      )
       setSubmitting(false)
     }
   }
@@ -94,11 +99,6 @@ function ResolutionForm({ alert, currentUserName, onClosed }: ResolutionFormProp
       onSubmit={(event) => void handleSubmit(event)}
       className="flex flex-col gap-4"
     >
-      {submitFailed && (
-        <AlertMessage variant="error" title="L'alerte n'a pas pu être clôturée.">
-          Vos observations sont conservées. Vérifiez votre connexion puis réessayez.
-        </AlertMessage>
-      )}
       <TextareaField
         id="alert-note"
         label="Observations cliniques"
@@ -129,9 +129,7 @@ export function AlertDetailsPage({ currentUserName, renderPatientContext }: Aler
   if (state.status === 'loading') {
     return (
       <Page title={title} backLink={backLink}>
-        <p role="status" className="text-sm text-muted">
-          Chargement de l'alerte…
-        </p>
+        <PageSkeleton label="Chargement de l'alerte…" />
       </Page>
     )
   }
@@ -161,12 +159,6 @@ export function AlertDetailsPage({ currentUserName, renderPatientContext }: Aler
       description="Vérification d'un dépassement de seuil signalé par le télésuivi"
       backLink={backLink}
     >
-      {justClosed && (
-        <AlertMessage variant="success" title="L'alerte a été clôturée.">
-          Vos observations sont enregistrées.
-        </AlertMessage>
-      )}
-
       <AlertBanner alert={alert} />
 
       <div className="grid items-start gap-6 xl:grid-cols-5">

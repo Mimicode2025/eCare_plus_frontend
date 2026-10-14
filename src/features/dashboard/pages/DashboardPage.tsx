@@ -4,6 +4,7 @@ import { Page } from '@/components/layouts/Page'
 import { Alert as AlertMessage } from '@/components/ui/Alert'
 import { Card } from '@/components/ui/Card'
 import { IconLink, recordIconPath } from '@/components/ui/IconLink'
+import { PageSkeleton } from '@/components/ui/Skeleton'
 import { StatTile } from '@/components/ui/StatTile'
 import { buttonClassName } from '@/components/ui/styles'
 import { formatDateTime } from '@/utils/formatDateTime'
@@ -79,9 +80,7 @@ export function DashboardPage({ data, failed }: DashboardPageProps) {
             Rechargez la page pour réessayer.
           </AlertMessage>
         ) : (
-          <p role="status" className="text-sm text-muted">
-            Chargement du tableau de bord…
-          </p>
+          <PageSkeleton label="Chargement du tableau de bord…" />
         )}
       </Page>
     )
@@ -220,9 +219,21 @@ export function DashboardPage({ data, failed }: DashboardPageProps) {
                 <li key={link.to}>
                   <Link
                     to={link.to}
-                    className="block rounded-lg border border-line px-4 py-3 text-sm font-semibold text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-primary"
+                    className="group flex items-center justify-between gap-3 rounded-2xl bg-page px-4 py-3 text-sm font-semibold text-ink transition duration-150 hover:bg-primary-soft hover:text-primary-strong focus-visible:outline-2 focus-visible:outline-primary active:scale-[0.98]"
                   >
                     {link.label}
+                    <svg
+                      className="size-4 shrink-0 transition-transform duration-150 group-hover:translate-x-1"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="m9 6 6 6-6 6" />
+                    </svg>
                   </Link>
                 </li>
               ))}
