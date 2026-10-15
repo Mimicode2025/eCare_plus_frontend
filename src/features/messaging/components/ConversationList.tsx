@@ -101,7 +101,7 @@ export function ConversationList({ conversations }: { conversations: Conversatio
                           }`}
                         >
                           {lastMessage
-                            ? `${lastMessage.author === 'professionnel' ? 'Vous : ' : ''}${lastMessage.text}`
+                            ? `${lastMessage.author === 'professionnel' ? 'Vous : ' : ''}${lastMessage.voice ? 'Message vocal' : lastMessage.text}`
                             : 'Aucun message pour le moment'}
                         </p>
                         {unreadCount > 0 && (

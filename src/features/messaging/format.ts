@@ -28,6 +28,18 @@ export function formatActivity(isoDateTime: string) {
     : shortDayFormatter.format(new Date(isoDateTime))
 }
 
+/** Durée d'un appel terminé, par exemple « 4 min 12 s » ou « 45 s ». */
+export function formatCallDuration(seconds: number) {
+  const minutes = Math.floor(seconds / 60)
+  return minutes === 0 ? `${seconds} s` : `${minutes} min ${seconds % 60} s`
+}
+
+/** Chronomètre d'un appel en cours, par exemple « 04:12 ». */
+export function formatTimer(seconds: number) {
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `${pad(Math.floor(seconds / 60))}:${pad(seconds % 60)}`
+}
+
 export function getInitials(name: string) {
   return name
     .split(/\s+/)

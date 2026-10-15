@@ -106,6 +106,29 @@ export async function sendMessage(conversationId: string, text: string): Promise
   return message
 }
 
+/**
+ * Envoie un message vocal. Simulé : l'enregistrement reste dans le navigateur, lisible jusqu'au
+ * rechargement de la page.
+ */
+export async function sendVoiceMessage(
+  conversationId: string,
+  recording: Blob,
+  durationSeconds: number,
+  waveform: number[],
+): Promise<Message> {
+  await simulateNetwork()
+  const message: Message = {
+    id: crypto.randomUUID(),
+    conversationId,
+    author: 'professionnel',
+    text: '',
+    voice: { url: URL.createObjectURL(recording), durationSeconds, waveform },
+    sentAt: new Date().toISOString(),
+  }
+  messages.push(message)
+  return message
+}
+
 export async function markConversationRead(conversationId: string): Promise<void> {
   await simulateNetwork()
   for (const message of conversationMessages(conversationId)) unreadIds.delete(message.id)
