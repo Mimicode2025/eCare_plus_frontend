@@ -10,14 +10,25 @@ export interface VoiceNote {
   waveform?: number[]
 }
 
+/** Photo ou document joint à un message ; le texte du message sert alors de légende. */
+export interface MessageAttachment {
+  kind: 'image' | 'file'
+  url: string
+  name: string
+  /** Taille en octets. */
+  size: number
+  mimeType: string
+}
+
 export interface Message {
   id: string
   conversationId: string
   /** Le backend renvoie l'identifiant de l'expéditeur ; l'interface n'a besoin que de son côté. */
   author: 'patient' | 'professionnel'
-  /** Vide pour un message vocal. */
+  /** Vide pour un message vocal ; légende facultative d'une pièce jointe. */
   text: string
   voice?: VoiceNote
+  attachment?: MessageAttachment
   /** Date et heure d'envoi au format ISO-8601. */
   sentAt: string
 }

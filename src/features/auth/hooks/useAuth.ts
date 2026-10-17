@@ -5,6 +5,8 @@ export interface AuthContextValue {
   user: User | null
   login: (credentials: Credentials) => Promise<void>
   logout: () => void
+  /** Remplace les informations de l'utilisateur connecté, par exemple après une modification du profil. */
+  updateUser: (user: User) => void
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

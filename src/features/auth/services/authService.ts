@@ -71,6 +71,7 @@ export async function login({ identifier, password }: Credentials): Promise<Sess
     response = await apiRequest<SessionResponse>('/auth/connexion', {
       method: 'POST',
       body: { identifiant: identifier.trim(), motDePasse: password },
+      anonymous: true,
     })
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) throw new InvalidCredentialsError()
@@ -86,13 +87,74 @@ export async function login({ identifier, password }: Credentials): Promise<Sess
     user: {
       id: response.profil.id,
       name: `${response.profil.prenoms} ${response.profil.nom}`,
+      firstName: response.profil.prenoms,
+      lastName: response.profil.nom,
       email: response.profil.email ?? undefined,
       role,
     },
   }
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session))
+  saveSession(session)
   setAccessToken(session.token)
   return session
+}
+
+/** Conserve la session le temps de l'onglet, par exemple après une modification du profil. */
+export function saveSession(session: Session) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session))
+}
+
+/* Réinitialisation du mot de passe : code à 4 chiffres reçu par e-mail, puis nouveau mot de passe. */
+
+/** Le backend ne sait pas envoyer d'e-mail (service d'envoi non configuré ou en panne). */
+export class CodeDeliveryUnavailableError extends Error {}
+
+/** Code faux ou expiré, trop d'essais, ou autorisation de réinitialiser expirée. */
+export class InvalidResetCodeError extends Error {}
+
+/**
+ * Demande l'envoi d'un code. Le backend répond de la même façon que l'adresse corresponde
+ * ou non à un compte, pour ne pas révéler quelles adresses sont inscrites.
+ */
+export async function requestPasswordCode(email: string): Promise<void> {
+  try {
+    await apiRequest<void>('/auth/mot-de-passe/otp', {
+      method: 'POST',
+      body: { email: email.trim() },
+      anonymous: true,
+    })
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 503) throw new CodeDeliveryUnavailableError()
+    throw error
+  }
+}
+
+/** Vérifie le code ; renvoie le jeton qui autorise à choisir un nouveau mot de passe. */
+export async function verifyPasswordCode(email: string, code: string): Promise<string> {
+  try {
+    const response = await apiRequest<{ jetonReinitialisation: string }>(
+      '/auth/mot-de-passe/otp/verifier',
+      { method: 'POST', body: { email: email.trim(), code }, anonymous: true },
+    )
+    return response.jetonReinitialisation
+  } catch (error) {
+    if (error instanceof ApiError && (error.status === 409 || error.status === 400)) {
+      throw new InvalidResetCodeError()
+    }
+    throw error
+  }
+}
+
+export async function resetPassword(resetToken: string, newPassword: string): Promise<void> {
+  try {
+    await apiRequest<void>('/auth/mot-de-passe/reinitialiser', {
+      method: 'POST',
+      body: { jeton: resetToken, nouveauMotDePasse: newPassword },
+      anonymous: true,
+    })
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 409) throw new InvalidResetCodeError()
+    throw error
+  }
 }
 
 export function logout() {

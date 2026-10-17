@@ -2,7 +2,16 @@ import { useId, useState } from 'react'
 import { NavLink } from 'react-router'
 import { InitialsTile } from '@/features/messaging/components/InitialsTile'
 import { formatActivity } from '@/features/messaging/format'
-import type { Conversation } from '@/features/messaging/types/message'
+import type { Conversation, Message } from '@/features/messaging/types/message'
+
+/** Aperçu du dernier message : son texte, ou la nature d'un message vocal ou d'une pièce jointe. */
+function messagePreview(message: Message) {
+  const sender = message.author === 'professionnel' ? 'Vous : ' : ''
+  if (message.voice) return `${sender}Message vocal`
+  if (message.attachment?.kind === 'image') return `${sender}Photo`
+  if (message.attachment) return `${sender}Document : ${message.attachment.name}`
+  return `${sender}${message.text}`
+}
 
 const unreadLabel = (count: number) =>
   count === 1 ? '1 message non lu' : `${count} messages non lus`
@@ -101,7 +110,7 @@ export function ConversationList({ conversations }: { conversations: Conversatio
                           }`}
                         >
                           {lastMessage
-                            ? `${lastMessage.author === 'professionnel' ? 'Vous : ' : ''}${lastMessage.voice ? 'Message vocal' : lastMessage.text}`
+                            ? messagePreview(lastMessage)
                             : 'Aucun message pour le moment'}
                         </p>
                         {unreadCount > 0 && (

@@ -62,7 +62,7 @@ export function MessagingPage() {
 
   return (
     <Page title="Messagerie" description={pageDescription}>
-      <div className="flex h-[75vh] min-h-112 overflow-hidden rounded-3xl border border-line bg-surface shadow-sm lg:h-[calc(100vh-14rem)]">
+      <div className="flex h-[75vh] min-h-112 overflow-hidden rounded-3xl border border-line bg-surface shadow-sm lg:h-[calc(100vh-8rem)]">
         {/* Sur petit écran, la liste laisse place au fil de la conversation ouverte. */}
         <div
           className={`min-h-0 w-full flex-col lg:flex lg:w-88 lg:shrink-0 lg:border-r lg:border-line ${

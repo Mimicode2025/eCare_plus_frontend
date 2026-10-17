@@ -30,6 +30,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user: session?.user ?? null,
       login: async (credentials) => setSession(await authService.login(credentials)),
       logout,
+      updateUser: (user) => {
+        if (!session) return
+        const next = { ...session, user }
+        authService.saveSession(next)
+        setSession(next)
+      },
     }),
     [session, logout],
   )

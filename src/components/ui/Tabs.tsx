@@ -27,7 +27,8 @@ export function Tabs({ label, tabs, active, onChange }: TabsProps) {
         role="tablist"
         aria-label={label}
         onKeyDown={handleKeyDown}
-        className="inline-flex gap-1 rounded-full border border-line bg-surface p-1.5 shadow-sm"
+        // Toute la largeur, partagée entre les onglets ; défilement si l'écran est trop étroit.
+        className="flex w-full min-w-max gap-1 rounded-full border border-line bg-surface p-1.5 shadow-sm"
       >
         {tabs.map((tab) => {
           const selected = tab.id === active
@@ -41,7 +42,7 @@ export function Tabs({ label, tabs, active, onChange }: TabsProps) {
               aria-controls={tabPanelId(tab.id)}
               tabIndex={selected ? 0 : -1}
               onClick={() => onChange(tab.id)}
-              className={`h-10 rounded-full px-5 text-sm whitespace-nowrap transition duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.97] ${
+              className={`h-10 flex-1 rounded-full px-5 text-sm whitespace-nowrap transition duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.97] ${
                 selected
                   ? 'bg-primary-strong font-semibold text-white shadow-md'
                   : 'font-medium text-muted hover:bg-page hover:text-ink'

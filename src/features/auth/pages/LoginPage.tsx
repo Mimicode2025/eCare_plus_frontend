@@ -1,15 +1,12 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router'
-import logoMark from '@/assets/logo-mark.png'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { PasswordField } from '@/components/ui/PasswordField'
 import { TextField } from '@/components/ui/TextField'
+import { AuthLayout } from '@/features/auth/components/AuthLayout'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import {
-  InvalidCredentialsError,
-  UnsupportedRoleError,
-} from '@/features/auth/services/authService'
+import { InvalidCredentialsError, UnsupportedRoleError } from '@/features/auth/services/authService'
 
 type LoginField = 'identifier' | 'password'
 type LoginErrors = Partial<Record<LoginField, string>>
@@ -48,8 +45,10 @@ export function LoginPage() {
   const { user, login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  // Identifiant transmis par l'écran de réinitialisation du mot de passe, s'il y en a un.
+  const knownIdentifier: unknown = location.state?.identifier
   const [values, setValues] = useState<Record<LoginField, string>>({
-    identifier: '',
+    identifier: typeof knownIdentifier === 'string' ? knownIdentifier : '',
     password: '',
   })
   const [errors, setErrors] = useState<LoginErrors>({})
@@ -101,45 +100,43 @@ export function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-10">
-      <div className="flex animate-enter items-center gap-3">
-        <img src={logoMark} alt="" className="size-12" />
-        <span className="font-display text-3xl font-extrabold text-primary">ecare+</span>
-      </div>
+    <AuthLayout title="Connexion" description="Accédez au portail de suivi de vos patients.">
+      <form
+        noValidate
+        onSubmit={(event) => void handleSubmit(event)}
+        className="flex flex-col gap-5"
+      >
+        {failure && (
+          <Alert variant="error" title={failureMessages[failure].title}>
+            {failureMessages[failure].hint}
+          </Alert>
+        )}
 
-      <div className="w-full max-w-md animate-pop rounded-3xl border border-line bg-surface p-6 shadow-lg sm:p-10">
-        <h1 className="font-display text-2xl font-bold text-ink">Connexion professionnelle</h1>
-        <p className="mt-2 text-sm text-muted">Saisissez vos identifiants d'accès.</p>
-
-        <form
-          noValidate
-          onSubmit={(event) => void handleSubmit(event)}
-          className="mt-6 flex flex-col gap-5"
-        >
-          {failure && (
-            <Alert variant="error" title={failureMessages[failure].title}>
-              {failureMessages[failure].hint}
-            </Alert>
-          )}
-
-          <fieldset disabled={submitting} className="flex min-w-0 flex-col gap-5">
-            <TextField
-              label="E-mail ou numéro de téléphone"
-              autoComplete="username"
-              {...bind('identifier')}
-            />
+        <fieldset disabled={submitting} className="flex min-w-0 flex-col gap-5">
+          <TextField
+            label="E-mail ou numéro de téléphone"
+            autoComplete="username"
+            {...bind('identifier')}
+          />
+          <div className="flex flex-col gap-2">
             <PasswordField
               label="Mot de passe"
               autoComplete="current-password"
               {...bind('password')}
             />
-          </fieldset>
+            <Link
+              to="/mot-de-passe-oublie"
+              className="self-end text-sm font-semibold text-primary-strong underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-primary"
+            >
+              Mot de passe oublié ?
+            </Link>
+          </div>
+        </fieldset>
 
-          <Button type="submit" size="lg" fullWidth loading={submitting}>
-            {submitting ? 'Connexion en cours…' : 'Se connecter au portail'}
-          </Button>
-        </form>
-      </div>
-    </main>
+        <Button type="submit" size="lg" fullWidth loading={submitting}>
+          {submitting ? 'Connexion en cours…' : 'Se connecter'}
+        </Button>
+      </form>
+    </AuthLayout>
   )
 }

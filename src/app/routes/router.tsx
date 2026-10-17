@@ -10,9 +10,10 @@ import {
 import { ProtectedLayout } from '@/app/routes/ProtectedLayout'
 import { AlertsPage } from '@/features/alerts'
 import { AppointmentsPage } from '@/features/appointments'
-import { LoginPage } from '@/features/auth'
+import { ForgotPasswordPage, LoginPage } from '@/features/auth'
 import { MessagingPage } from '@/features/messaging'
 import { CreatePatientPage, EditPatientPage } from '@/features/patients'
+import { ProfilePage } from '@/features/profile'
 
 const managerOnly = (page: ReactNode) => <RoleOnly role="gestionnaire">{page}</RoleOnly>
 const doctorOnly = (page: ReactNode) => <RoleOnly role="medecin">{page}</RoleOnly>
@@ -20,6 +21,7 @@ const doctorOnly = (page: ReactNode) => <RoleOnly role="medecin">{page}</RoleOnl
 export const router = createBrowserRouter([
   { index: true, element: <LandingRoute /> },
   { path: 'connexion', element: <LoginPage /> },
+  { path: 'mot-de-passe-oublie', element: <ForgotPasswordPage /> },
   {
     element: <ProtectedLayout />,
     children: [
@@ -33,6 +35,7 @@ export const router = createBrowserRouter([
       { path: 'messagerie', element: doctorOnly(<MessagingPage />) },
       { path: 'messagerie/:conversationId', element: doctorOnly(<MessagingPage />) },
       { path: 'rendez-vous', element: doctorOnly(<AppointmentsPage />) },
+      { path: 'profil', element: <ProfilePage /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

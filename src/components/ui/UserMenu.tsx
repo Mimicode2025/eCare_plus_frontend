@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { Link } from 'react-router'
 import { Avatar } from '@/components/ui/Avatar'
 import { useDismiss } from '@/hooks/useDismiss'
 
@@ -7,6 +8,8 @@ interface UserMenuProps {
   /** Rôle de l'utilisateur, affiché au-dessus de son nom. */
   role: string
   email?: string
+  /** Adresse de la page profil de l'utilisateur. */
+  profileTo: string
   onLogout: () => void
 }
 
@@ -19,7 +22,7 @@ function getInitials(name: string) {
 }
 
 /** Pastille de l'utilisateur connecté ; elle ouvre un volet avec son identité et la déconnexion. */
-export function UserMenu({ name, role, email, onLogout }: UserMenuProps) {
+export function UserMenu({ name, role, email, profileTo, onLogout }: UserMenuProps) {
   const [open, setOpen] = useState(false)
   const close = useCallback(() => setOpen(false), [])
   const containerRef = useDismiss<HTMLDivElement>(open, close)
@@ -46,11 +49,39 @@ export function UserMenu({ name, role, email, onLogout }: UserMenuProps) {
 
       {open && (
         <div className="absolute top-full right-0 z-40 mt-3 w-72 animate-pop overflow-hidden rounded-3xl border border-line bg-surface shadow-xl">
-          <div className="flex flex-col gap-0.5 px-5 py-4">
-            <p className="truncate font-display text-base font-bold text-ink">{name}</p>
-            <p className="truncate text-sm text-muted">{email ?? role}</p>
+          {/* L'identité mène aussi au profil. */}
+          <div className="p-2">
+            <Link
+              to={profileTo}
+              onClick={close}
+              aria-label={`Voir le profil de ${name}`}
+              className="flex flex-col gap-0.5 rounded-2xl px-3 py-2 transition-colors hover:bg-page focus-visible:outline-2 focus-visible:outline-primary"
+            >
+              <span className="truncate font-display text-base font-bold text-ink">{name}</span>
+              <span className="truncate text-sm text-muted">{email ?? role}</span>
+            </Link>
           </div>
-          <div className="border-t border-line p-2">
+          <div className="flex flex-col gap-1 border-t border-line p-2">
+            <Link
+              to={profileTo}
+              onClick={close}
+              className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-ink transition-colors hover:bg-page focus-visible:outline-2 focus-visible:outline-primary"
+            >
+              <svg
+                className="size-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 21a8 8 0 0 1 16 0" />
+              </svg>
+              Mon profil
+            </Link>
             <button
               type="button"
               onClick={onLogout}

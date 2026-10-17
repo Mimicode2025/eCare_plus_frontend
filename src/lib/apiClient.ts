@@ -26,12 +26,18 @@ export function setUnauthorizedHandler(handler: (() => void) | null) {
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   body?: unknown
+  /** Route publique (connexion, mot de passe oublié) : le jeton de la session n'est pas joint. */
+  anonymous?: boolean
 }
 
-export async function apiRequest<T>(path: string, { method = 'GET', body }: RequestOptions = {}) {
+export async function apiRequest<T>(
+  path: string,
+  { method = 'GET', body, anonymous = false }: RequestOptions = {},
+) {
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (body !== undefined) headers['Content-Type'] = 'application/json'
-  if (accessToken) headers.Authorization = `Bearer ${accessToken}`
+  const token = anonymous ? null : accessToken
+  if (token) headers.Authorization = `Bearer ${token}`
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
@@ -40,11 +46,12 @@ export async function apiRequest<T>(path: string, { method = 'GET', body }: Requ
   })
 
   if (!response.ok) {
-    if (response.status === 401 && accessToken) onUnauthorized?.()
+    if (response.status === 401 && token) onUnauthorized?.()
     const problem = (await response.json().catch(() => null)) as { detail?: string } | null
     throw new ApiError(response.status, problem?.detail ?? response.statusText)
   }
 
-  if (response.status === 204) return undefined as T
-  return (await response.json()) as T
+  // Réponse sans contenu : 204, mais aussi 202 pour une demande prise en compte.
+  const text = await response.text()
+  return (text ? JSON.parse(text) : undefined) as T
 }

@@ -1,4 +1,8 @@
-import type { Conversation, Message } from '@/features/messaging/types/message'
+import type {
+  Conversation,
+  Message,
+  MessageAttachment,
+} from '@/features/messaging/types/message'
 import { demoDateTime, simulateNetwork } from '@/lib/demoData'
 
 /*
@@ -123,6 +127,29 @@ export async function sendVoiceMessage(
     author: 'professionnel',
     text: '',
     voice: { url: URL.createObjectURL(recording), durationSeconds, waveform },
+    sentAt: new Date().toISOString(),
+  }
+  messages.push(message)
+  return message
+}
+
+/**
+ * Envoie une photo ou un document, avec une légende facultative. Simulé : le fichier reste dans
+ * le navigateur, consultable jusqu'au rechargement de la page.
+ */
+export async function sendAttachmentMessage(
+  conversationId: string,
+  content: Blob,
+  details: Omit<MessageAttachment, 'url'>,
+  caption: string,
+): Promise<Message> {
+  await simulateNetwork()
+  const message: Message = {
+    id: crypto.randomUUID(),
+    conversationId,
+    author: 'professionnel',
+    text: caption,
+    attachment: { ...details, url: URL.createObjectURL(content) },
     sentAt: new Date().toISOString(),
   }
   messages.push(message)

@@ -2,7 +2,12 @@ export type UserRole = 'gestionnaire' | 'medecin'
 
 export interface User {
   id: string
+  /** Prénoms puis nom, tel qu'affiché dans l'application. */
   name: string
+  /* Absents des sessions ouvertes avant leur ajout : la page profil part alors du nom complet. */
+  firstName?: string
+  lastName?: string
+  phone?: string
   email?: string
   role: UserRole
 }
