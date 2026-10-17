@@ -54,7 +54,8 @@ src/features/
 - React
 - TypeScript
 - Vite
-- CSS
+- Tailwind CSS
+- React Router
 - Oxlint
 
 D'autres dépendances pourront être ajoutées au fur et à mesure des besoins du projet.
@@ -93,8 +94,17 @@ npm run lint
 
 ## 📌 État du projet
 
-Le projet est actuellement au stade d'initialisation du frontend.
+Fonctionnalités en place :
 
-Aucune fonctionnalité métier n'est encore implémentée.
+- connexion et déconnexion, avec des écrans adaptés au rôle ;
+- gestionnaire : liste des patients avec recherche et filtre, création, consultation et modification d'un dossier ;
+- médecin : tableau de bord, file des alertes et traitement d'une alerte, liste des patients avec dernière mesure et alertes, dossier avec suivi des mesures (dernières valeurs et historique) et observations cliniques.
 
-La première fonctionnalité prévue est la **création d'un dossier patient par un médecin**.
+Toutes les données sont **fictives** : l'authentification, les patients, les mesures et les alertes sont simulés dans les fichiers `services/` de chaque feature, en attendant l'API du backend.
+
+Comptes de démonstration (toute structure, mot de passe `12345678`) :
+
+| Rôle         | Identifiant |
+| ------------ | ----------- |
+| Gestionnaire | `abi2026`   |
+| Médecin      | `dr2026`    |
